@@ -3,162 +3,26 @@
 import sys, os, glob
 import datetime
 import numpy as np
-import io_tools.hdf as hio
-import analysis_tools.grid_and_interpolation as gi
 import scipy.spatial
 
-from standard_config import *
+import tropy.io_tools.hdf as hio
+import tropy.analysis_tools.grid_and_interpolation as gi
+from  tropy.standard_config import *
 
-
-sys.path.append('%s/.python' % proj_path)
-
-from  convective_orga.inout.cluster_prop_reader import read_cluster_props
-
-
-######################################################################
-######################################################################
-
-def remove_to_less_clusters(dset):
-
-    tname = 'time_id'
-
-    t = dset[tname]
-    tvec = set(t)
-
-    # loop over different time instances
-    for ti in sorted(tvec):
-        
-        mask = (dset[tname] == ti) 
-        nonmask = np.logical_not(mask)
-
-        if mask.sum() < 3:
-
-            for vname in dset.keys():
-                dset[vname] = dset[vname][nonmask]
-    return
+from  coorga.inout.cluster_prop_reader import read_cluster_props
+from coorga.object_metrics.calculate_nn_distance import calculate_nn_distance
+from cluster_analysis import create_time_id, remove_too_few_clusters
  
-######################################################################
-######################################################################
-
-
-
-def calculate_nn_distance(x, y, t, k = 2, props = {}):
-    
-    '''
-    The subroutine uses KDTree Algorithm to calculate 
-    nearest-neighor distance for k neighbors.
-
-    USAGE
-    =====
-    dist = calculate_nn_distance(x, y, t, k = 2)
-
-
-    INPUT
-    =====
-    x: x-coordinate
-    y: y-coordinate
-    t: t-coordinate, which is used for sequential masking
-
-    
-    OUTPUT
-    ======
-    dist: nearest neighbor distances field
-    '''
-
-    tvec = set(t)
-    
-    dist = []
-
-    nn_props = {}
-    for pname in props.keys():
-        nn_props[pname] = []
-
-    # loop over different time instances
-    for ti in sorted(tvec):
-        
-        mask = (t == ti)
-        
-        xy = np.column_stack([x[mask], y[mask]])
-        kdtree =  scipy.spatial.KDTree(xy)
-        
-        d, index = kdtree.query(kdtree.data, k = k + 1)
-        
-        dist.append( d )
-
-        for pname in props.keys():
-            nn_props[pname].append( props[pname][mask][index[:,1]] )
-
-    dist = np.row_stack(dist )
-
-    for pname in props.keys():
-        nn_props[pname] = np.hstack( nn_props[pname] )
-
-    if len(nn_props.keys()) == 0:
-        return dist[:,1:]
-    else:
-        return dist[:,1:], nn_props
-        
-
 
 ######################################################################
 ######################################################################
 
-def create_time_id(abs_time, rel_time):
-
+def main(expname, regtype, varname, date, do_output = True):
 
     '''
-    assume 
-    * abs_time as array of days since epoche
-    * rel_time as array of hours
+    Gathers a collection of cell properties for a selected 
+    time period.
     '''
-
-    id_list = []
-    
-    for i, tr in enumerate(rel_time):
-
-        init_day = abs_time[i] - rel_time[i]/24.
-        init_time = datetime.datetime(1970,1,1) + datetime.timedelta(days = init_day)
-        init_str = init_time.strftime('%Y%m%d_%H%M')
-        
-        hour = '%s' %  str(np.int(tr)).zfill(2)
-        
-        id_list.append( '%s_%s' % (init_str, hour) )
-
-    return np.array( id_list )
-
-
-
-######################################################################
-######################################################################
-
-if __name__ == '__main__':
-
-    # possible inputs ------------------------------------------------
-    try:
-        expname = sys.argv[1]
-    except:
-        expname = 'basic'
-
-
-    try: 
-        regtype = sys.argv[2]
-    except:
-        regtype = 'narval'
-
-
-    try: 
-        varname = sys.argv[3]
-    except:
-        varname = 'imf'
-
-
-    try:
-        date = sys.argv[4]
-    except:
-        date = '201608'
-    # ================================================================
-
-
 
     # select file parameters -----------------------------------------
     if regtype == 'narval' and varname == 'bt108':
@@ -278,7 +142,7 @@ if __name__ == '__main__':
 
         d['time_id'] = create_time_id(d['abs_time'], d['rel_time'])
 
-        remove_to_less_clusters(d)
+        remove_too_few_clusters(d)
         
         d['aspect'] = d['diameter']**2 / d['hull_dmax']**2
 
@@ -304,8 +168,47 @@ if __name__ == '__main__':
 
 
     # save stuff into hdf --------------------------------------------
-    fdir = kws['fdir']
-    oname = '%s/collected_cluster_props_%s_%s_%s.h5' % (fdir,  varname, date, expname)
-    print '... save data to %s' % oname
-    hio.save_dict2hdf(oname, out)
+    if do_output:
+        fdir = kws['fdir']
+        oname = '%s/collected_cluster_props_%s_%s_%s.h5' % (fdir,  varname, date, expname)
+        print '... save data to %s' % oname
+        hio.save_dict2hdf(oname, out)
     # ================================================================
+
+    return out
+
+
+
+######################################################################
+######################################################################
+
+if __name__ == '__main__':
+
+    # possible inputs ------------------------------------------------
+    try:
+        expname = sys.argv[1]
+    except:
+        expname = 'basic'
+
+
+    try: 
+        regtype = sys.argv[2]
+    except:
+        regtype = 'narval'
+
+
+    try: 
+        varname = sys.argv[3]
+    except:
+        varname = 'imf'
+
+
+    try:
+        date = sys.argv[4]
+    except:
+        date = '201608'
+    # ================================================================
+
+
+    main(expname, regtype, varname, date)
+

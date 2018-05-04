@@ -1,18 +1,76 @@
 #!/usr/bin/env python
 
+import copy
 import numpy  as np
+import datetime
 import scipy.spatial
+import mahotas
 
-import analysis_tools.grid_and_interpolation as gi
+# tropy libs
+import tropy.analysis_tools.grid_and_interpolation as gi
+import tropy.analysis_tools.segmentation as seg
+from tropy.standard_config import *
 
-from standard_config import *
+# local libs
+from segmentation_config import predefined_setups
+
+
+######################################################################
+######################################################################
+
+def remove_too_few_clusters(dset):
+
+    tname = 'time_id'
+
+    t = dset[tname]
+    tvec = set(t)
+
+    # loop over different time instances
+    for ti in sorted(tvec):
+        
+        mask = (dset[tname] == ti) 
+        nonmask = np.logical_not(mask)
+
+        if mask.sum() < 3:
+
+            for vname in dset.keys():
+                dset[vname] = dset[vname][nonmask]
+    return
+
+
+######################################################################
+######################################################################
+
+def create_time_id(abs_time, rel_time):
+
+
+    '''
+    assume 
+    * abs_time as array of days since epoche
+    * rel_time as array of hours
+    '''
+
+    id_list = []
+    
+    for i, tr in enumerate(rel_time):
+
+        init_day = abs_time[i] - rel_time[i]/24.
+        init_time = datetime.datetime(1970,1,1) + datetime.timedelta(days = init_day)
+        init_str = init_time.strftime('%Y%m%d_%H%M')
+        
+        hour = '%s' %  str(np.int(tr)).zfill(2)
+        
+        id_list.append( '%s_%s' % (init_str, hour) )
+
+    return np.array( id_list )
+
 
 
 ######################################################################
 ######################################################################
 
 
-def cell_analysis(dset, 
+def single_cell_analysis(dset, 
                   var_names = ['bt108', 'dist'],
                   weight_names = ['bt108_trans', 'dist'],
                   do_landsea_fraction = True):
@@ -163,11 +221,11 @@ def cell_analysis(dset,
 ######################################################################
 
 
-def cluster_analysis(dset, cset, noffset = 0, **kwargs):
+def cellset_analysis(dset, cset, noffset = 0, **kwargs):
 
 
     '''
-    Performs subsequent cell analysis.
+    Performs subsequent single cell analysis for a set of cells.
     
     INPUT
     =====
@@ -198,7 +256,7 @@ def cluster_analysis(dset, cset, noffset = 0, **kwargs):
         # do cell analysis
         cname = 'cell_%s' % str(nc + noffset).zfill(8)
 
-        cell = cell_analysis(dset, **kwargs)
+        cell = single_cell_analysis(dset, **kwargs)
         cell['cell_name'] = cname
         cell['cell_id'] = nc
 
@@ -211,6 +269,170 @@ def cluster_analysis(dset, cset, noffset = 0, **kwargs):
 
     return cset
         
+
+
+######################################################################
+######################################################################
+
+
+def cluster_analysis(din, varname,
+                     expname = 'basic',
+                     dist_to_edge = 11,
+                     aux_names = [],
+                     verbose = True):
+    
+    '''
+    Performs segmentation and cell analysis 
+    for a temporal data stack.
+
+    
+    INPUT
+    =====
+    din: input data set, including georeference.
+    varname: variable name of field that is segmented
+
+    expname: optional, name of parameter set that is used for segmentation.
+    
+    
+    OUTPUT
+    ======
+    segmented_field: stacked of segmented data
+    cset: set of cell properties
+
+    '''
+
+
+
+
+    #LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (1) get segmentation setup
+    #LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+
+    sett = predefined_setups(expname.split('-')[0])
+    setup_for_later_output = copy.copy(sett)
+
+    thresh = sett.pop('thresh')
+    min_size = sett.get('min_size')
+
+
+
+    #LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (2) preparation of input field
+    #LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+
+    # check if field should be inverted
+    if len(expname.split('-')) == 2 and expname.split('-')[1] == 'inv':
+        field = -din[varname]
+
+    elif varname == 'bt108':
+        field = -din[varname]
+        thresh = -thresh 
+
+        if verbose:
+            print '... invert field'
+            print
+            
+    else:
+        field = din[varname]
+
+
+    # get field dimensions
+    ntime, nrow, ncol = field.shape
+
+
+    segmented_field = np.zeros_like( field )
+    noffset = 0
+
+    cluster_set = {}
+    dset = din.copy()
+
+
+    #LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (3) time loop over segmentation and cell analysis
+    #LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+
+    for itime in [0, 1]: #range(ntime):
+        
+        if verbose:
+            print '... calculate cluster properties for %d' % itime
+
+
+        # get local time field
+        f = field[itime]
+
+        if thresh == 'relative50_for_mass_flux':
+            thresh = special_threshold_calculations(din['lon'], din['lat'], b, 
+                                                    method = 'relative50_for_mass_flux')
+
+        # set masks
+        f.data[f.mask] = thresh / 2.
+        
+
+        # get categorial field through segmnetation
+        # ======================================
+
+        if 'iclust' in din.keys():
+            # field is already clustered
+            c = din['iclust'][itime]
+        else:
+            c = seg.clustering(f, thresh, **sett)
+
+
+        # remove edge connections
+        c = mahotas.labeled.remove_bordering(c, dist_to_edge)
+        c = seg.remove_small_clusters(c, min_size = min_size)
+
+
+        segmented_field[itime] = c
+
+        
+        # cluster analysis
+        # ==================
+
+        # prepare input for cluster analysis
+        # -----------------------------------
+
+        dset['clust'] = c
+        dset[varname] = f
+
+        # set also transformed field
+        trans_name = '%s_trans' % varname
+        df = np.abs( f - thresh )
+        dset[trans_name] = np.where( f < thresh, 0, df )
+
+        # get distance field
+        dist = scipy.ndimage.distance_transform_edt(c)
+        dset['dist'] = dist
+        
+        dset['rel_time'] = din['rel_time'][itime]
+        dset['abs_time'] = din['abs_time'][itime]
+        
+
+
+        var_names =  [varname, trans_name, 'dist']
+
+        for aux_name in aux_names:            
+            dset[aux_name] = din[aux_name][itime]
+            var_names += [ aux_name, ]
+
+
+
+        # perform analysis
+        # ----------------
+        cellset_analysis(dset, cluster_set, 
+                         noffset = noffset, 
+                         var_names = var_names, 
+                         weight_names = ['%s_trans' % varname, 'dist'],) 
+
+        noffset += c.max()
+
+    for cprop in cluster_set.keys():
+        cluster_set[cprop] = np.array( cluster_set[cprop] )
+    # ================================================================
+
+
+
+    return setup_for_later_output, segmented_field, cluster_set
 
 
 ######################################################################

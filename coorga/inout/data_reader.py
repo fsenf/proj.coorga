@@ -3,13 +3,140 @@
 import os, sys, glob
 import numpy  as np
 import datetime
+import netCDF4
 
-import io_tools.hdf as hio
-import io_tools.netcdf as ncio
+import tropy.io_tools.hdf as hio
+import tropy.io_tools.netcdf as ncio
+import tropy.analysis_tools.grid_and_interpolation as gi
+from tropy.standard_config import *
 
-import analysis_tools.grid_and_interpolation as gi
+######################################################################
+######################################################################
 
-from standard_config import *
+def input(fname, varname):
+    
+    '''
+    Input Interface as data reader wrapper.
+
+    INPUT
+    =====
+    fname: name of data file
+    varname: name of variable (if fname is cluster file than 
+                               varname should be the correspsong basic field)
+    '''
+
+
+
+    # ----------------------------------------------------------------
+    # two chances: 
+    # (i) fname is standard basic data input filename
+    #       -> then, everything works like usual
+    #
+    # (ii) fname is the cluster id filename 
+    #       -> then, sat filename has to be constructed
+    #       -> cluster data have to be read
+
+
+    if check_if_clusterfile(fname):
+
+        # get data filename
+        clustname = fname[:]
+        fname, expname = data_fname_from_cluster_fname(
+            clustname, fileext = 'nc') 
+
+        print '... read cluster data'
+        cset = dict( iclust = read_cluster( clustname ) )
+        cset['clustname'] = clustname
+        cset['fname'] = fname
+    # ================================================================
+
+
+    # read data ------------------------------------------------------
+    if varname == 'bt108':
+        if 'narval' in fname:
+            dset = read_narval_data(fname)
+
+        elif 'hdfd' in fname:
+            dset = read_hdcp2_data(fname)
+
+        elif 'icon-lem' in fname:
+            dset = read_icon_lem_data(fname)
+
+
+    else:
+        if 'narval' in fname:
+            dset = read_narval_addvars(fname, varname)
+    # ================================================================
+            
+
+
+    # combined data with cluster info if there ...
+    try:
+        dset.update( cset )
+    except:
+        # no cluster file ...
+        pass
+
+    return dset
+
+
+######################################################################
+######################################################################
+
+def check_if_clusterfile(fname):
+
+    '''
+    Checks if file is netcdf and contains a cluster field.
+    '''
+
+    f = netCDF4.Dataset(fname, 'r')
+    v = f.variables
+    vnames = v.keys()
+    f.close()
+
+    if 'iclust' in vnames or 'b_segmented' in vnames:
+        return True
+    else:
+        return False
+
+
+######################################################################
+######################################################################
+
+
+def data_fname_from_cluster_fname(clustname, fileext = 'h5'):
+
+    '''
+    Connects the data filename to the cluster filename.
+    '''
+
+    # directory reconstruction
+    # ========================
+    dirname = os.path.dirname( clustname )
+
+    subdirectories = dirname.split( '/' )
+
+    # remove the last subdirectory
+    newdir = '/'.join( subdirectories[:-1] )
+ 
+
+
+
+    # filename reconstruction
+    # =======================
+
+    # the standard filename contains 'segmented' in the first place
+    #                           and the expname in the last place
+    
+    basename = os.path.splitext(os.path.basename(clustname))[0]
+    baselist = basename.split('_')
+
+    expname = baselist[-1]
+    newbase = '_'.join( baselist[1:-1] )
+
+    newname = '/%s/%s.%s' % ( newdir, newbase, fileext )
+    
+    return newname, expname
 
 
 ######################################################################
@@ -371,7 +498,7 @@ if __name__ == '__main__':
     print dset['rel_time'], dset['abs_time']
 
 
-    fname = '%s/icon/lem-de/msevi_3d_coarse_icon-lem-tstack_DOM_20150704.nc' % local_data_path
+    fname = '%s/icon/lem-de/synsat/msevi_3d_coarse_icon-lem-tstack_DOM_20150704-shifted-double_day.nc' % local_data_path
     dset = read_icon_lem_data(fname)
 
 
