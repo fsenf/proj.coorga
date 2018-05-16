@@ -1,6 +1,6 @@
 
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='coorga',
       version='0.1',
@@ -8,6 +8,7 @@ setup(name='coorga',
       author='Fabian Senf',
       author_email='senf@tropos.de',
       license='GPL',
-      packages=['coorga'],
+      packages=find_packages(),
+#['coorga', 'coorga.inout', 'coorga.object_creation', 'coorga.metrics'],
       zip_safe=False)
 

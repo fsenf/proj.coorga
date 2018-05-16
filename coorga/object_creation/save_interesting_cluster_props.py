@@ -10,7 +10,7 @@ import tropy.analysis_tools.grid_and_interpolation as gi
 from  tropy.standard_config import *
 
 from  coorga.inout.cluster_prop_reader import read_cluster_props
-from coorga.object_metrics.calculate_nn_distance import calculate_nn_distance
+from coorga.metrics.calculate_nn_distance import calculate_nn_distance
 from cluster_analysis import create_time_id, remove_too_few_clusters
  
 
@@ -123,7 +123,7 @@ def main(expname, regtype, varname, date, do_output = True):
     # ================================================================
 
 
-    # for rain / water colum comparison ------------------------------
+    # for rain / water column comparison ------------------------------
     for vname in ['rr', 'tcw', 'imf']:
         for prop in ['max', 'min', 'mean', 'p10', 'p25', 'p50', 'p75', 'p90']:
             vlist.append( '%s_%s' % (vname, prop) )

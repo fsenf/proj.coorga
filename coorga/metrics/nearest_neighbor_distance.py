@@ -9,7 +9,7 @@ import scipy.spatial
 ######################################################################
 
 
-def calculate_nn_distance(x, y, t, k = 2, props = {}):
+def nearest_neighbor_distance(x, y, t, k = 2, props = {}):
     
     '''
     The subroutine uses KDTree Algorithm to calculate 
