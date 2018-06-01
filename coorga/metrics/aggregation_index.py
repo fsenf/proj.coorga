@@ -8,14 +8,10 @@ import scipy.stats, scipy.ndimage
 
 import datetime
 
-import matplotlib
-matplotlib.use('Agg')
-import pylab as pl
 
-
-import analysis_tools.grid_and_interpolation as gi
+import tropy.analysis_tools.grid_and_interpolation as gi
 import segmentation
-import io_tools.hdf as hio
+import tropy.io_tools.hdf as hio
 
 from standard_config import *
 
@@ -27,20 +23,34 @@ def cluster_analysis( lon, lat, c, dmin = 20.,
                       do_fast = False, xya = None):
 
     '''
-    USAGE
-    =====
-    ca = cluster_analysis(lon, lat, c)
+    Simple version of cluster analysis used for aggregation metrics.
+    
+    Parameters
+    -----------
+    lon : numpy array, 2dim with shape = (nrows, ncols) 
+        longitude
 
+    lat :  numpy array, 2dim with shape = (nrows, ncols) 
+        latitude
+
+    c : numpy array, 2dim with shape = (nrows, ncols), type = int
+        categorical cluster field
     
-    INPUT
-    =====
-    lon: longitude
-    lat: latitude
-    c: categorical cluster field
+    dmin : int or float, optional, default = 20
+        minimum diameter kept in the cell set data
+
+    do_fast : bool, optional, default = False
+        switch to use faster calculation of cell properties
     
-    OUTPUT
-    ======
-    ca: cluster analysis dict
+    xya : tuble of 3 numpy arrays, optional, default = None
+        recalculated fields of x- and y-coordinate and gridbox area
+        (x, y, a) = xya
+
+
+    Returns
+    --------
+    ca : dict
+        cluster analysis dict
     '''
     
     
@@ -66,7 +76,6 @@ def cluster_analysis( lon, lat, c, dmin = 20.,
         vnames = ['area',  'xc', 'yc']
         for vname in vnames:
             ca[vname] = []
-        # ================================================================
      
      
         # loop over clusters---------------------------------------------
@@ -140,18 +149,29 @@ def tobin_scai(ca, Nmax = 10, L = 10):
     Calculates the Tobin et al. (2012) SCAI index.
 
 
-    USAGE
-    =====
-    scai = tobin_scai( ca )
+    Parameters
+    -----------
+    ca : dict
+        cluster analysis field
+
+    Nmax : int, optional, default = 10
+        number of all grid points
+
+    L : int, optional, default = 10
+        geometrical size of the domain
     
+
+    Returns
+    --------
+    scai : float
+        SCAI index
+
     
-    INPUT
-    =====
-    ca: cluster analysis field
+
+    See Also
+    --------
+    Tobin, I., S. Bony, and R. Roca (2012), Observational Evidence for Relationships between the Degree of Aggregation of Deep Convection, Water Vapor, Surface Fluxes, and Radiation, J. Climate, 25(20), 6885-6904, doi:10.1175/jcli-d-11-00258.1.
     
-    OUTPUT
-    ======
-    scai: SCAI index
     '''
 
     
@@ -173,21 +193,23 @@ def get_domain_properties(lon, lat):
     Calculates properties of the considered domain, typical domain size and number of pixels.
 
 
-    USAGE
-    =====
-    Nmax, L = get_domain_properties(lon, lat)
+    
+    Parameters
+    ----------
+    lon : numpy array
+       longitude
+
+    lat : numpy array
+       latitude
     
     
-    INPUT
-    =====
-    lon: longitude
-    lat: latitude
+    Returns
+    --------
+    Nmax : int
+       number of pixels / grid points in the domain
     
-    
-    OUTPUT
-    ======
-    Nmax: number of pixels / grid points in the domain
-    L: typical size / diameter of the domain (square-equivalent)
+    L : float
+       typical size / diameter of the domain (square-equivalent)
     '''
     
 
@@ -226,25 +248,29 @@ def coverage(f, thresh1, thresh2, dthresh, inverse = False):
     are subsequently performed for all different thresholds.
 
 
-    USAGE
-    =====
-    cov =  coverage(f, thresh1, thresh2, dthresh, inverse = False)
     
-    
-    INPUT
-    =====
-    f: 2d or 3d field
-    thresh1: lower threshold
-    thresh2: upper threshold
-    dthresh: interval to increase threshold 
+    Parameters
+    ----------
+    f : numpy array
+        2d or 3d field
 
-    inverse: optional, switch to use values below threshold (if True)
+    thresh1 : float
+        lower threshold
+
+    thresh2 : float 
+        upper threshold
+
+    dthresh : float
+        interval to increase threshold 
+
+    inverse : bool, optional, default = False
+        switch to use values below threshold (if True)
 
     
-    
-    OUTPUT
-    ======
-    cov: dictionary of coverage values depending on threshold
+    Returns
+    --------
+    cov: dict
+        dictionary of coverage values depending on threshold
     '''
  
 

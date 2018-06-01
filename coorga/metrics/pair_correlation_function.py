@@ -26,31 +26,73 @@ def pairCorrelationFunction_2D(pos, egrid, numberDensity, rMax, dr,
 
     """Compute the two-dimensional pair correlation function, also known
     as the radial distribution function, for a set of circular particles
-    contained in a square region of a plane.  This simple function finds
-    reference particles such that a circle of radius rMax drawn around the
+    contained in a square region of a plane.  
+
+    This simple function finds reference particles such that a circle of radius rMax drawn around the
     particle will fit entirely within the square, eliminating the need to
     compensate for edge effects.  If no such particles exist, an error is
     returned. Try a smaller rMax...or write some code to handle edge effects! ;)
 
-    Arguments:
-        pos             position vector such that x, y = pos.T and pos.shape = (Nparticles, 2)
-        egrid           edge-based grid at which number density field is given
-        numberDensity   number density field, as number of particles per area
-        rMax            maximum radius 
-        dr              increment for increasing radius of annulus
-        equal_area      switch that determines if equi-distance radius rings or rings of equal area
-                        are chosen, optional
-        weight          if weight (number between 0 and 1) is set, than radius rings are calculated 
-                        from a weighted version between equi-distant (weight = 0) and equal area (weight = 1)
 
-    Returns a tuple: (g, radii, interior_indices)
-        g(r)            a numpy array containing the correlation function g(r) for each particle
-        g_ave(r)        a numpy array containing the average correlation function
-        radii           a numpy array containing the radii of the
-                        annuli used to compute g(r)
-        reference_indices   indices of reference particles
+    Parameters
+    ----------
         
-    Comment: outdated! The faster variant is now pcf that uses precalculated reference number fields!
+    pos : numpy array
+        position vector such that x, y = pos.T and pos.shape = (Nparticles, 2)
+        
+    egrid : numpy array
+        edge-based grid at which number density field is given
+    
+    numberDensity : numpy array
+        number density field, as number of particles per area
+        
+    rMax : float value
+        maximum radius
+ 
+    dr : float value
+        increment for increasing radius of annulus
+        
+    rbins : numpy array, optional, default = None
+        array which contains range bin values
+
+    equal_area : bool, optional, default = True
+        switch that determines if equi-distance radius rings or rings of equal area
+        are chosen, optional
+        
+    weight : float, optional, default = None
+        if weight (number between 0 and 1) is set, than radius rings are calculated 
+        from a weighted version between equi-distant (weight = 0) and equal area (weight = 1)
+
+
+    constant_analytic : bool, optional default = False
+        use analytic form of expected reference number assuming a constant number density
+ 
+    use_radial_interpolation : bool, optional,  default = False
+        if number field is represented by an interpolating function and intergation is performed
+        on that field
+
+    finite_size_correction : bool, optional, default = False
+        if a finite size correction N / (N-1) is applied
+
+
+    Returns 
+    -------
+    
+    g(r) : numpy array 
+        correlation function g(r) for each particle
+        
+    g_ave(r) : numpy array 
+        average correlation function
+        
+    radii : numpy array 
+        radii of the   annuli used to compute g(r)
+
+     interior_indices : numpy array
+        indices of reference particles
+        
+    Note
+    ------
+    Possibly outdated! Try the faster variant pcf that uses precalculated reference number fields!
     
     """
     # Number of particles in ring/area of ring/number of reference particles/number density
@@ -155,29 +197,55 @@ def pairCorrelationFunction_2D(pos, egrid, numberDensity, rMax, dr,
     return (g, g_average, radii, interior_indices)
 
 
+
 ######################################################################
 ######################################################################
+
+
 
 def pcf(pos, rbins, domain, refgrid, ref_number, tree_as_grid_input = False):
     
-    """Compute the two-dimensional pair correlation function, also known
+    """
+    Compute the two-dimensional pair correlation function, also known
     as the radial distribution function, for a set of circular particles
     contained in a square region of a plane.  
 
-    Arguments:
-        pos             position vector such that x, y = pos.T and pos.shape = (Nparticles, 2)
-        rbins           ring edge vector
-        domain          containing min & max coordiantes for masking the edge
+    Parameters
+    ----------
+   
+    pos : numpy array
+        position vector such that x, y = pos.T and pos.shape = (Nparticles, 2)
         
-        refgrid         grid on which reference number of cells is given
-        ref_number      reference number of cells per ring
+    rbins : numpy array
+        ring edge vector
+    
+    domain : tuple or list in the form ((xmin, xmax), (ymin, ymax))
+        containing min & max coordiantes for masking the edge
+        
+    refgrid :  tuble of two 2dim numpy arrays OR scipy tree class instance
+        grid on which reference number of cells is given
+        
+    ref_number : numpy array
+        reference number of cells per ring
 
-    Returns a tuple: (g, radii, interior_indices)
-        g(r)            a numpy array containing the correlation function g(r) for each particle
-        g_ave(r)        a numpy array containing the average correlation function
-        radii           a numpy array containing the radii of the
-                        annuli used to compute g(r)
-        reference_indices   indices of reference particles
+    tree_as_grid_input : bool, optional, default = False
+        if not reference grid, but scipy tree class instance (for nearest neighbor int) is supplied
+
+
+    Returns 
+    -------
+    
+    g(r) : numpy array 
+        correlation function g(r) for each particle
+        
+    g_ave(r) : numpy array 
+        average correlation function
+        
+    radii : numpy array 
+        radii of the   annuli used to compute g(r)
+
+     interior_indices : numpy array
+        indices of reference particles
     """
 
     # Number of particles in ring/area of ring/number of reference particles/number density
@@ -265,16 +333,38 @@ def init_reference_numbers(egrid, numberDensity, rbins, nsub = 4, radial_integra
     '''
     Calculates the number of expected cells / particle as function of distance.
     
-    Arguments:
-        egrid           edge-based grid at which number density field is given
-        numberDensity   number density field, as number of particles per area
-        rbins           ring edge array
+
+    Parameters
+    -----------
+    egrid : tuble of list of two 2dim numpy arrays
+        edge-based grid at which number density field is given
         
-    Returns:
-        xout            output x-grid
-        yout            output y-grid
-        n0              expected number of cells on grid for each ring interval
+    numberDensity : numpy array
+        number density field, as number of particles per area
+        
+    rbins : numpy array
+        ring edge array
+
+    nsub : int values, optional, default = 4
+        values that determines subsampling of the analyzed fields
+
+    radial_integration : bool, optional, default = True
+        switch if radial integration of an interpolated representation of the 
+        number field is used.
+
+        
+    Returns
+    --------
+    xout : numpy array, 2dim with shape = (nrows, ncols)
+       output x-grid
+ 
+    yout : numpy array, 2dim with shape = (nrows, ncols)
+       output y-grid
+    
+    n0 : numpy array, 3dim with shape = (nrows, ncols, nrbins)
+       expected number of cells on grid for each ring interval
     '''
+
     
     # get grids
     # ==========
@@ -331,10 +421,6 @@ def init_reference_numbers(egrid, numberDensity, rbins, nsub = 4, radial_integra
 #################################################################
 #################################################################
 
-##LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-## automatically generated by 10-PairCorrelationFunction.ipynb
-##TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
 
 def integrate_2dfield(egrid, f, mask):
     
@@ -342,16 +428,22 @@ def integrate_2dfield(egrid, f, mask):
     Integrates a 2d field over a certain region given a mask and grid.
     
     
-    INPUT
-    ======
-    egrid: edge-based grid such that:  xeg, yeg = egrid
-    f: 2d field
-    mask: mask of a certain region (same shape as f)
+    Parameters
+    ----------
+    egrid : tuble of list of numpy arrays
+        edge-based grid such that:  xeg, yeg = egrid
+
+    f : numpy array, 2dim
+        input field that is integrated
+
+    mask : numpy array, 2dim, bool
+        mask of a certain region that is used in integration (same shape as f)
     
-    
-    OUTPUT
-    ======
-    fint: on mask conditioned integral of f
+
+    Returns
+    -------
+    fint : float value
+        integral of f for the region where mask is True
     '''
     
     xeg, yeg = egrid
@@ -364,10 +456,6 @@ def integrate_2dfield(egrid, f, mask):
     
     return fint
 
-##LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-## automatically generated by 12-Radial_Integration_of_2d_Function.ipynb
-##TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
 
 ##########################################################################
 ##########################################################################
@@ -378,16 +466,25 @@ def transform2cylinder_coords(xm, ym, f, p0 = (0,0)):
     Interpolates and transforms a function given in Cartesian coordinates (x,y)
     into cylindrical coordinates (r, phi).
     
-    INPUT
-    =====
-    xm: center-based x-grid
-    ym: center-based y-grid
-    f: gridded field
-    p0: base point, i.e. x0, y0 = p0
+    Parameters
+    ------------
+    xm : numpy array, 2dim
+        center-based x-grid
     
-    OUTPUT
-    ======
-    ftrans: interpolation function in (r, phi)-coordinates
+    ym : numpy array, 2dim 
+        center-based y-grid
+
+    f : numpy array, 2dim
+        gridded field
+
+    p0 : tuple of 2 float values, optional, default = (0,0)
+        base point, i.e. x0, y0 = p0
+    
+
+    Returns
+    --------
+    ftrans: function of two arguments (r, phi)
+        interpolation function in (r, phi)-coordinates
     '''
     
     # get base point
@@ -419,17 +516,28 @@ def radial_ring_integration_2d_field(egrid, f, r1, r2, p0):
     and the ring edges.
     
     
-    INPUT
-    ======
-    egrid: edge-based grid such that:  xeg, yeg = egrid
-    f: 2d field
-    r1: inner ring radius
-    r2: outer ring radius
+    Parameters
+    ----------
+    egrid : tuple or list of two numpy arrays
+        edge-based grid such that:  xeg, yeg = egrid
 
-    
-    OUTPUT
-    ======
-    fint: radial integral of f
+    f : numpy array, 2dim
+        2d field
+
+    r1 : float value
+        inner ring radius
+
+    r2 : float value
+        outer ring radius
+
+    p0 : tuple of 2 float values
+        base point, i.e. x0, y0 = p0
+
+
+    Returns
+    --------
+    fint : float value
+        radial integral of f
     '''
     
     
@@ -461,16 +569,25 @@ def radial_integration_2d_field(egrid, f, rbins, p0):
     and the ring edges.
     
     
-    INPUT
-    ======
-    egrid: edge-based grid such that:  xeg, yeg = egrid
-    f: 2d field
-    rbins: ring distances
+    Parameters
+    ----------
+    egrid :  tuple or list of two numpy arrays
+        edge-based grid such that:  xeg, yeg = egrid
+
+    f : numpy array, 2dim
+        2d field
+
+    rbins : numpy array
+       array of range bins
+
+    p0 : tuple of 2 float values
+        base point, i.e. x0, y0 = p0
 
     
-    OUTPUT
-    ======
-    fint: radial integral of f
+    Returns
+    --------
+    fint : float
+        radial integral of f
     '''
     
     
@@ -499,28 +616,34 @@ def radial_integration_2d_field(egrid, f, rbins, p0):
 #################################################################
 #################################################################
 
-##LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-## automatically generated by 10-PairCorrelationFunction.ipynb
-##TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
-
 
 
 def radius_ring_edges(rMax, dr, equal_area = True, weight = None):
+
     '''
     Returns inner and outer ring edges for circular ring elements.
     
-    INPUT
-    ======
-    rMax: maximum ring radius
-    dr: ring elemnt size
-    equal_area: if True, ring elements are calculated to have equal area
-    weight: if number between 0 and 1, a weighted version between 
-            equidistant and equal-area rings is chosen
+
+    Parameters
+    -----------
+    rMax : float value
+        maximum ring radius
+
+    dr : float value
+        ring element size
+
+    equal_area :  bool, optional, default = True
+        if True, ring elements are calculated to have equal area
+
+    weight: float, optional, default = None
+        if number between 0 and 1, a weighted version between 
+        equidistant and equal-area rings is chosen
             
-    OUTPUT
-    ======
-    redges: ring edges
+
+    Returns
+    --------
+    redges : numpy array
+        ring edges
     
     '''
     # weight variant

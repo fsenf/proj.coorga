@@ -18,9 +18,34 @@ from segmentation_config import predefined_setups
 ######################################################################
 ######################################################################
 
-def remove_too_few_clusters(dset):
+def remove_too_few_clusters(dset, tname = 'time_id', Nmin = 3):
 
-    tname = 'time_id'
+    '''
+    Removes all cells that belong to a set with too few clusters.
+
+    
+    Parameters
+    ----------
+    dset: dict
+        dictionary of cell properties
+    
+    tname: str, optional, default = 'time_id'
+        name based on which a cell set is identified (typically ID)
+    
+    Nmin: int, optional, default = 3
+        minimum number of cell (if smaller set is excluded)
+
+
+    Returns
+    -------
+    None
+
+    
+    Notes
+    ------
+    The input set is modified.
+    '''
+
 
     t = dset[tname]
     tvec = set(t)
@@ -31,7 +56,7 @@ def remove_too_few_clusters(dset):
         mask = (dset[tname] == ti) 
         nonmask = np.logical_not(mask)
 
-        if mask.sum() < 3:
+        if mask.sum() < Nmin:
 
             for vname in dset.keys():
                 dset[vname] = dset[vname][nonmask]
@@ -45,9 +70,22 @@ def create_time_id(abs_time, rel_time):
 
 
     '''
-    assume 
-    * abs_time as array of days since epoche
-    * rel_time as array of hours
+    Creates a time ID based on absolute and relative time.
+
+
+    Parameters
+    ----------
+    abs_time : numpy array, 1dim
+        array of absolute times -  days since epoche
+
+    rel_time : numpy array, 1dim
+        array of relative time - as array of hours
+
+
+    Returns
+    -------
+    id_list : numpy array of strings, 1dim
+        array of time IDs
     '''
 
     id_list = []
@@ -71,21 +109,40 @@ def create_time_id(abs_time, rel_time):
 
 
 def single_cell_analysis(dset, 
-                  var_names = ['bt108', 'dist'],
-                  weight_names = ['bt108_trans', 'dist'],
-                  do_landsea_fraction = True):
+                         var_names = ['bt108', 'dist'],
+                         weight_names = ['bt108_trans', 'dist'],
+                         do_landsea_fraction = True,
+                         land_sea_category_bins = np.arange(0.5,6.5, 1)):
+
 
     '''
     Calculates a set of properties for a masked cell.
     
-    INPUT
-    =====
-    dset: input data set, including the cell mask
 
-    
-    OUTPUT
-    ======
-    cset: set of cell properties
+    Parameters
+    ----------
+    dset: dict
+       input data set of 2dim analysis fields, including the cell mask
+
+    var_names : list, optional, default =  ['bt108', 'dist']
+       list of variable name taken for analysis
+
+    weight_names : list, optional, default =  ['bt108_trans', 'dist']
+       list of variable names that are used for weight calculations (e.g. weighted average)
+
+    do_landsea_fraction : bool, optional, default = True
+       switch if land sea fraction calculation is used
+      
+       The field dset['fraction_of_lsm_types'] needs to be defined.
+
+    land_sea_category_bins : list, optional, default = np.arange(0.5,6.5, 1)
+       binning used for land-sea-categories
+
+
+    Returns
+    -------
+    cset : dict
+         set of cell properties
     '''
 
 
@@ -145,7 +202,7 @@ def single_cell_analysis(dset,
     # land sea coast type contributions ------------------------------
     if do_landsea_fraction:
         lsmc = dset['lsm'][mask]
-        h, xe = np.histogram(lsmc, np.arange(0.5,6.5, 1))
+        h, xe = np.histogram(lsmc, land_sea_category_bins)
         cset['fraction_of_lsm_types'] = h.astype(np.float) / npx
     # ================================================================
 
@@ -227,14 +284,27 @@ def cellset_analysis(dset, cset, noffset = 0, **kwargs):
     '''
     Performs subsequent single cell analysis for a set of cells.
     
-    INPUT
-    =====
-    dset: input data set, including the cell mask
+    
+    Parameters
+    -----------
+    dset : dict
+        input data set, including the cell mask
+
+    cset : dict
+        set of possibly already existing cell properties (also used in output)
+    
+    noffset : int, optional, default = 0
+        offset for counter of cell IDs (needed if there are already existing cell data in cset)
+
+    **kwargs : dict
+        keyword that are passed to function single_cell_analysis
 
     
-    OUTPUT
-    ======
-    cset: set of cell properties
+    Returns
+    -------
+    cset : dict
+        set of possibly already existing cell properties and added new ones
+    
     '''
 
 
@@ -286,18 +356,41 @@ def cluster_analysis(din, varname,
     for a temporal data stack.
 
     
-    INPUT
-    =====
-    din: input data set, including georeference.
-    varname: variable name of field that is segmented
+    Parameters
+    -----------
+    din : dict
+        set of input 2dim data , including georeference.
 
-    expname: optional, name of parameter set that is used for segmentation.
+    varname : str
+        variable name of field that is segmented (should be included in din)
+
+
+    expname : str, optional, default = 'basic'
+        name of parameter set that is used for segmentation.
+
     
+    dist_to_edge : int, optional, default = 11
+       distance to edge, cells that are closer will be removed
+
     
-    OUTPUT
-    ======
-    segmented_field: stacked of segmented data
-    cset: set of cell properties
+    aux_names : list, optional, default = []
+        list of field names that are included in the statistical cell analysis
+
+
+    verbose : bool, optional, default = True
+       switch that controls if analysis are announced
+    
+
+    Returns
+    -------
+    setup_for_later_output : dict
+        contains parameter set used for segmentation
+
+    segmented_field : numpy array
+        time stacked of segmented data (3dim)
+
+    cset: dict
+         set of cell properties
 
     '''
 

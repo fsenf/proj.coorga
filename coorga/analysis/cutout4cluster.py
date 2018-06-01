@@ -25,16 +25,22 @@ def cutout_cluster(c, nc,
     Makes a cutout of a categorial field c for an object of class / number nc.
 
 
-    INPUT
-    =====
-    c: 2d categorial field
-    nc: category number / class which is chosen
-    nedge: optional, number of edge pixels included
+    Parameters
+    ----------
+    c : numpy array, 2dim
+        categorial cell label field
+
+    nc : int
+        category number / class which is chosen
+
+    nedge : int, optional, default = 30
+        number of edge pixels included
 
 
-    OUTPUT
-    =====
-    ccut: cutout of categorial field c
+    Returns
+    --------
+    ccut : numpy array, 2dim
+        cutout of categorial field c
     '''
 
 

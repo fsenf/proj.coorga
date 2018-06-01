@@ -28,21 +28,33 @@ def random_field_generator_nonuniform_dist(c,  nd0,
     is set, the number of cells is taken from a Poisson distribution.
 
 
-    USAGE
-    =====
-    cran = random_field_generator(c, use_poisson = False)
+
+    Parameters
+    ------------
+    c : numpy array, int
+       cluster field (integer index of cell)
+
+    nd0 : numpy array
+        average number distribution (same grid as cluster field c !!!)
+    
+    nfixed : int, optional, default = None
+        if set, nfixed specifies a constant number of cells used in bootstrapping
+
+    use_poisson : bool, optional, default = False
+       if True, the number of cells is drawn from Poisson distribution, 
+       with repeated use of same cells possible
+
+    nedge : int, optional, default = 10
+       size of edge (in px) where no cells are allowed
+    
+    dmin : float, optional, default = 1.5
+       minimum distance between two cells randomly place in the domain
 
     
-    INPUT
-    =====
-    c: cluster field (integer index of cell)
-    nd0: average number distribution (as grid as cluster field c !!!)
-    use_poisson: optional, if True, the number of cells is drawn from Poisson distribution, 
-                 with repeated use of same cells possible
-
-    OUTPUT
-    ======
-    cran: randomly rearanged cluster field
+    Returns
+    --------
+    cran : numpy array
+        randomly rearanged cluster field
     '''
     
 

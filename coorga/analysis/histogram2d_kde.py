@@ -12,6 +12,43 @@ def histogram2d_kde( vlist, bins,
                      edge_based_grid = False,
                      output_standard = False):
 
+    '''
+    Make 2d histograms based on KDE (kernel density estimation) method.
+
+    
+    Parameters
+    ----------
+    vlist : list of numpy arrays
+       list of two variables
+    
+    bins : list or tuple of two numpy arrays
+        bin list that is used for binning the two variables
+
+    edge_based_grid : bool, optional, default = False
+        controls if edge- or midpoint-based grid is returned
+    
+    output_standard : bool, optional, default = False
+        if True, also the standard numpy histogram results are returned
+
+
+    Returns
+    --------
+    x1 : numpy array, 2dim
+        grid of the first variable (edge- or midpoint-based)
+
+    y1 : numpy array, 2dim
+        grid of the second variable (edge- or midpoint-based)
+    
+    h : numpy array, 2dim
+       kernel density estimates
+    
+    h_standard : numpy array, 2dim, optional, if output_standard = True
+       numpy histogram density estimates (using normed = True)
+
+    
+    
+    '''
+
     # prepare values .................................................
     values = np.vstack( vlist )
 

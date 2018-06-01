@@ -22,24 +22,39 @@ def main(fname,
          do_output = True):
 
     '''
-    Performed all the cluster analysis steps
+    Performed all the cluster analysis steps.
+
+
+    Parameters
+    ----------
+    fname : str
+       name of input variable file
+
+    expname : str, optional, default = 'basic'
+        name of the experiment (segmentation setup)
+
+    varname: str, optional, default = 'bt108'
+       analysis variable name that is read from fname
+
+    do_output: bool, optional, default = True
+        switch that determines if output is written in predefined file
+    
+
+    Returns
+    -------
+    b_segmented : numpy array, 3dim
+        segmented field 
+    
+    cset : dict
+        dictionary of cell properties
+
+
+    Notes
+    -----
+    The following workflow is applied
     (1) input of data
     (2) analysis
     (3) output into file (optiional)
-
-
-    INPUT
-    =====
-    fname: 
-    varname: variable name of field that is segmented
-
-    expname: optional, name of parameter set that is used for segmentation.
-    
-    
-    OUTPUT
-    ======
-    segmented_field: stacked of segmented data
-    cset: set of cell properties
 
     '''
 

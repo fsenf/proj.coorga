@@ -15,15 +15,19 @@ def slot_per_slot_averaging(f, d, mask = True, identifier_name = 'time_id'):
     '''
     Uses an identifier ID for categorization and averages a variable f for same IDs.
 
+
     Parameters
     ----------
     f : numpy array
        variable that is average for same IDs;
        f can be of rank n <=3, but 1st dimension must be cell dimension
+
     d : dict
        dictionary (typically cell propertes dict) that contains IDs entries
+
     mask : boolean numpy array, optional, default = True
        additional mask array to apply conditioned averaging
+
     identifier_name : str, default = 'time_id'
        name of the identifier variable in d
        

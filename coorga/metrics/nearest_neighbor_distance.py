@@ -15,21 +15,30 @@ def nearest_neighbor_distance(x, y, t, k = 2, props = {}):
     The subroutine uses KDTree Algorithm to calculate 
     nearest-neighor distance for k neighbors.
 
-    USAGE
-    =====
-    dist = calculate_nn_distance(x, y, t, k = 2)
 
+    Parameters
+    ----------
+    x : numpy array, 1dim with shape = (ncells)
+        x-coordinate
 
-    INPUT
-    =====
-    x: x-coordinate
-    y: y-coordinate
-    t: t-coordinate, which is used for sequential masking
-
+    y : numpy array, 1dim with shape = (ncells)
+        y-coordinate
     
-    OUTPUT
-    ======
-    dist: nearest neighbor distances field
+    t : numpy array, 1dim with shape = (ncells)
+        t-coordinate, which is used for sequential masking
+
+    props : dict, optional, default = {}
+        set of properties used of nearest neighbors calculations, 
+        e.g. what is the size of the nearest neighbor?
+    
+
+    Returns
+    -------
+    dist : numpy array, 2dim with shape = (ncells, number_of_neighbors)
+       nearest neighbor distances field
+
+    nn_props : dict containing numpy arrays, optional if props is not empty
+       collection pof nearest neighbor properties
     '''
 
     tvec = set(t)

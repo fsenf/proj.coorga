@@ -13,6 +13,18 @@ import tropy.analysis_tools.grid_and_interpolation as gi
 
 def atlantic_domain():
     
+    '''
+    Defintion of Atlantic Domain.
+
+    
+
+    Returns
+    --------
+    region : tuple of structure (x1, x2), (y1, y2)
+       min and max coordinates of Atlantic domain
+    '''
+
+
     x1, x2 = -5500., -2000.
     y1, y2 = 0., 2000.
 
@@ -27,15 +39,23 @@ def atlantic_masking(lon, lat, f, mask_value = 0.):
     '''
     Sets all values of f outside the tropical Atlantic domain to zero,
     
-    INPUT
-    =====
-    lon: longitude
-    lat: latitutde
-    f: field
-    
-    OUTPUT
-    ======
-    fm : masked field
+    Parameters
+    ----------
+    lon : numpy array
+       longitude
+
+    lat : numpy array
+       latitutde
+     
+    f : numpy array
+       original field
+
+
+    Returns
+    --------
+    fm : masked numpy array
+       masked field with entries outside atlantic domain set zero.
+
     '''
     
     
@@ -58,15 +78,20 @@ def atlantic_cutout_of_clusterdata(d, dext = 0.):
     '''
     Masks a cluster data dictionary.
     
+
+    Parameters
+    ----------
+    d : dict
+       cluster data set
     
-    INPUT
-    =====
-    d: cluster data set
+    dext : float
+       distance (km) to extend to atlantic region in outside direction
     
     
-    OUTPUT
-    ======
-    dcut: regionally cutted data
+    Returns
+    --------
+    dcut : dict
+       cluster data set with all cells removed outside the Atlantic
     '''
     
     

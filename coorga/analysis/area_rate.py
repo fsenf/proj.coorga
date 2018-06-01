@@ -28,15 +28,26 @@ def shift_objects(c, ind_shift,
     Shifts objects in a segmented cluster field by a determined 
     index shift.
 
-    INPUT
-    =====
-    c: segmented field, objects cell are indexed
-    ind_shift: index shift (forward shift)   = (row shift, column shift)
+
+    Parameters
+    ----------
+    c : numpy array, 2dim
+        segmented field, objects cell are indexed
+    
+    ind_shift : numpy array, 2dim
+        index shift (forward shift)   = (row shift, column shift)
+
+    index : list or numpy array, optional, default = None
+        index of cell to be shifted
+
+    as_uv : bool, optional, default = True
+        if True shift is composed of (col_shift, row_shift)
 
 
-    OUTPUT
-    ======
-    cs:  shift cluster field
+    Returns
+    --------
+     cs : numpy array, 2dim
+        shift cluster field
     '''
 
 
@@ -127,16 +138,55 @@ def object_nowcast(f1, f2,
     Objects identified in field f1 (segmentation s1) are shifted
     with average flow to match objects identified in field f2.
 
-    INPUT
-    =====
-    f1: field at present time (to be shifted)
-    f2: field at future time (taken to calculated opt. flow)
-    s1: optional, segmentation of field s1
+    
+    Parameters
+    ----------
+    f1 : numpy array, 2dim
+       field at present time (to be shifted)
+
+    f2 : numpy array, 2dim
+       field at future time (taken to calculated opt. flow)
+
+    output_symmetric_flow : bool, optional, default = False
+       switch if local flow field is returned
+
+    output_average_flow : bool, optional, default = False
+       switch if local flow field is returned
+
+    output_uv : bool, optional, default = False,
+       switch if flow vector (shift per object) is returned
+
+    s1 : numpy array, optional, default = None
+       segmentation of field s1
+
+    cluster_method : str, optional, default = 'connect'
+       which method used for clustering 
+
+    thresh : float, optional, default = 0.
+       selected threshold for clustering
+
+    vmin : float, optional, default = None
+       lower minimum value for field clipping 
+       if None, minimum from input fields is taken
+
+    vmax : float, optional, default = None
+       upper maximum value for field clipping 
+       if None, maximum from input fields is taken
 
 
-    OUTPUT
-    ======
-    t1: transformed object field at present time with object shifted 
+    Returns
+    -------
+    t1 : numpy array, 2dim
+       transformed object field at present time with object shifted 
+
+    flow : numpy array, 2dim, optional if output_symmetric_flow = True
+       local flow field
+
+    mflow : numpy array, 2dim, optional if output_average_flow = True
+       cell_average flow field
+
+    uv : numpy array, 2dim, optional if output_uv = True
+       shift vector per cell
     '''
 
     
@@ -236,21 +286,69 @@ def get_area_rate(lon, lat, f1, f2, thresh,
     shift is applied to field f1. 
     
     (iii) The shifted f1 and f2 are stack and segmented again to get time connection.
+
+
     
+    Parameters
+    ----------
+    lon : numpy array, 2dim
+       longitude field
 
-    INPUT
-    =====
-    lon: longitude
-    lat:latitude
-    f1: field from previous time step (to be shifted)
-    f2: field from present time step
-    thresh: threshold for field segmentation
-    
+    lat : numpy array, 2dim
+       latitude field
+
+    f1 : numpy array, 2dim
+       field at present time (to be shifted)
+
+    f2 : numpy array, 2dim
+       field at future time (taken to calculated opt. flow)
+
+    thresh : float
+       selected threshold for clustering
+
+    cluster_method : str, optional, default = 'connect'
+       which method used for clustering 
+
+    nsub : int, optional, default = 4
+       subsampling factor
+
+    vmin : float, optional, default = None
+       lower minimum value for field clipping 
+       if None, minimum from input fields is taken
+
+    vmax : float, optional, default = None
+       upper maximum value for field clipping 
+       if None, maximum from input fields is taken
+
+    output_percentile_change :  bool, optional, default = True
+       switch if change in percentile values is also returned
+
+    percentiles :  list,  optional, default = [50, 75, 90, 95]
+       percentiles for which change is monitored
+
+    output_vector : bool, optional, default = False
+       switch if change is returned as vector (and not 2d field)
+
+    dt : float, optional, default = 3600.
+       time interval
+
+    **kwargs: dict
+       keyword argument used in clustering routine
 
 
-    OUTPUT
-    ======
-    da: area rate field at present time (same size as f2)  ( units km * m/s )
+    Returns
+    -------
+    da : numpy array, 2dim, shape subsampled with nsub
+       area rate field ( units km * m/s )
+
+    davec : numpy array 1dim, optional if output_vector = True
+       area rate vector, sorted per cell
+
+    dp : numpy array, 2dim, optional if output_percentile_change = True
+       percentile change (not divided by dt)
+
+    dpvec : numpy array 1dim, optional if output_vector = True AND output_percentile_change = True
+       percentile change vector, sorted per cell
     '''
 
 
@@ -371,16 +469,27 @@ def percentiles_from_cluster(f, c, p = [25, 50, 75], index = None):
 
     Functionality missing in scipy.ndimage.measurements.
 
-    INPUT
-    =====
-    f: the field as basis for percentile calculation
-    c: labeled field
-    p: optional, percentiles array
+
+    Parameters
+    ----------
+    f : numpy array, 2dim
+        the field as basis for percentile calculation
+
+    c : numpy array, 2dim, int
+        labeled field
+
+    p : list or numpy array, optional, default =  [25, 50, 75]
+        percentiles array
+
+    index : list or numpy array, optional, default = None
+        list of cell indices to be analyzed
+        if None: all cells will be analyszed
 
 
-    OUTPUT
-    ======
-    pc: array of percentiles per cell (including background (set to zero))
+    Returns
+    --------
+    pc : numpy array, 1dim
+        array of percentiles per cell (including background (set to zero))
     '''
 
 

@@ -27,20 +27,21 @@ def random_field_generator(c, use_poisson = False, nedge = 10, dmin = 1.5):
     is set, the number of cells is taken from a Poisson distribution.
 
 
-    USAGE
-    =====
-    cran = random_field_generator(c, use_poisson = False)
-
     
-    INPUT
-    =====
-    c: cluster field (integer index of cell)
-    use_poisson: optional, if True, the number of cells is drawn from Poisson distribution, 
-                 with repeated use of same cells possible
+    Parameters
+    ----------
+    c : numpy array, dtype int 
+      cluster field (integer index of cell)
 
-    OUTPUT
-    ======
-    cran: randomly rearanged cluster field
+    use_poisson : boolean, optional, default: False
+       if True, the number of cells is drawn from Poisson distribution, 
+       with repeated use of same cells possible
+
+
+    Returns
+    -------
+    cran : numpy array
+       randomly rearanged cluster field
     '''
     
 

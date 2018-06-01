@@ -21,7 +21,33 @@ def main(expname, regtype, varname, date, do_output = True):
 
     '''
     Gathers a collection of cell properties for a selected 
-    time period.
+    time period, calculates some new props and finnaly saves results.
+
+
+    Parameters
+    ----------
+    expname : string
+        name of the experiment (segmentation setup)
+
+    regtype : string
+        region name
+
+    varname : string
+        variable name
+
+    date : string, typically in format %Y%m
+        string that specifies the date or part of the date
+
+    do_output: bool, optional, default = True
+        switch that determines if output is written in predefined file
+
+
+    Returns
+    -------
+    out: dict
+        dictionary that contains cell properties
+
+
     '''
 
     # select file parameters -----------------------------------------

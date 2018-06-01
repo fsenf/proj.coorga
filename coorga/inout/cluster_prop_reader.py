@@ -49,6 +49,51 @@ def read_cluster_props( vlist,
                         date = '', 
                         as_array = True):
 
+    '''
+    Reads cluster properties from a stack of files.
+
+    
+    Parameters
+    ----------
+    vlist : list
+        list of variables (cell properties)
+    
+    
+    ftype : str, optional, default = 'msevi'
+        file type (or mode) that is used for input, e.g. 'msevi' vs. 'synsat'
+
+    expname : str, optional, default = 'basic'
+        name of the segmentation setup
+
+    filepart : str, optional, default = '_narval_DOM01_'
+        part of the filenam edirectly after the ftype string
+
+    fdir : str, optional, default = '%s/cluster_properties' % narval_dir
+        file directory
+    
+    subpath : str, optional, default = None
+        subpath for grouped variables, e.g. /main_group/sub_group1/...'
+     
+  
+    time_masking  : str, optional, default = True
+        switch if masking based on time variable should be done
+
+    date : str, optional, default = ''
+        date or part of date string
+
+    as_array : str, optional, default = True
+        if return is provided as numpy array
+
+
+
+    Returns
+    --------
+    dset : dict
+       dictionary of cell properties
+    '''
+
+
+
     if type(vlist) == type(''):
         vlist = [vlist,]
 

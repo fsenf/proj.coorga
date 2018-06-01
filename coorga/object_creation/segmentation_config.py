@@ -10,13 +10,15 @@ def predefined_setups(name):
     '''
     A set of predefined segmentation parameter sets.
 
-    INPUT
-    =====
-    name: name of a parameter set
+    Parameters
+    ----------
+    name : str
+        name of a parameter set
 
-    OUTPUT
-    ======
-    setup: a set of segmentation parameters as dictionary
+    Returns
+    ----------
+    setup : dict
+       predefined set of segmentation parameters as dictionary
     '''
 
     # BASIS SETUP ----------------------------------------------------

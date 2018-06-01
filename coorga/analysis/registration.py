@@ -2,24 +2,14 @@
 
 # load libraries -----------------------------------------------------
 import sys, os, glob, copy
-import matplotlib
-matplotlib.use('AGG')
 
 import numpy as np
 import datetime
 import scipy.ndimage
 import skimage.feature 
 
-import io_tools.hdf as hio
-import io_tools.netcdf as ncio
 
-import io_tools.radolan as rado
-import analysis_tools.grid_and_interpolation as gi
-import analysis_tools.parallax
-import analysis_tools.segmentation as seg
-from analysis_tools.make_hrv_upscaling import make_hrv_upscaling 
-
-from standard_config import *
+import tropy.analysis_tools.grid_and_interpolation as gi
 
     
 ######################################################################
@@ -27,28 +17,46 @@ from standard_config import *
 
 def Lagrangian_change(f1, f2,
                       bsize = (100, 100),
-                      tracer_field = None,
                       return_index = False):
 
     
     '''
-    Lagrangian change is calculated as following:
+    Lagrangian change is calculated based on Image registration.
+
+
+    Method works as following:
 
     (i) f1 is interpreted as function F(x,t) and f2 as F(x, t + 1)
     (ii) f1 is shifted to match f2, -> F_t(x,t) =  F(x + dx, t)
     (iii) dF = F(x, t + 1) - F(x + dx, t)
 
 
-    INPUT
-    =====
-    f1: field to be shifted
-    f2: target field to switch the other field is shifted
-    bsize: optional, box size tuple
+    Parameters
+    ----------
+    f1 : numpy array, 2dim field
+       field to be shifted
+    
+    f2 : numpy array, 2dim field
+       target field to switch the other field is shifted
+
+    bsize : tuple or list, optional, default =  (100, 100)
+       box size tuple
+
+    return_index : bool, optional, default = False
+       switch if also index shift fields are returned
 
 
-    OUTPUT
-    ======
-    df: mean Lagrangian change
+    Returns
+    --------
+    ir_shift : numpy array, int, optional if return_index = True
+       shifts in row index
+
+    ic_shift : numpy array, int, optional if return_index = True
+       shifts in column index
+
+    df : numpy array, 2dim field but subsampled by boxsize
+       mean Lagrangian change calculated from registration
+    
     '''
 
     if bsize[0] != bsize[1]:
@@ -57,11 +65,11 @@ def Lagrangian_change(f1, f2,
     if np.mod(bsize[0], 2) == 0:
         raise Exception('Registration is not able not handle even bsize')
         
+
     # get field shape ................................................
     nrow, ncol = f1.shape
 
-
-
+    
     # determine subsampling parameters ...............................
     nrow_sub = nrow / bsize[0]
     ncol_sub = ncol / bsize[1]
@@ -102,39 +110,50 @@ def Lagrangian_change(f1, f2,
             df[i, j] = (freg[1] - freg[0]).mean()
             ir_shift[i, j] = ind[0,-1] - irow
             ic_shift[i, j] = ind[1,-1] - icol
-
+    
     if return_index:
         return ir_shift, ic_shift, df
     else:
         return df
-
+        
 
 ######################################################################
 ######################################################################
+
 
 def semi_Lagrangian_change4tstack(f3d,
-                                    tracer_field = None,
                                     symmetric = True,
                                     bsize = (100,100)):
 
     '''
-    Calculates Lagrangian change for 3d field (1st dimension time).
+    Calculates Lagrangian change for 3d field (1st dimension time)
+    based on Image registration.
 
     It is calculated in a semi-Lagrangian way, i.e. each time step
     the difference between a fixed box and its spatially-shifted 
     counterpart is computed.
 
-    INPUT
-    =====
-    f3d: 3d field (1st dimension time)
-    symmetric: optional, if time trend is calculated as average
-                         between forward and backward difference
 
-    OUTPUT
-    ======
-    df: Lagrangian change of a field 
+
+    Parameters
+    ----------
+    f3d : numpy array with shape = (ntimes, nrows, ncols)
+        3d field (1st dimension time)
+
+    symmetric : bool, optional, default = True,
+       if time trend is calculated as average
+       between forward and backward difference
+
+    bsize : tuple or list, optional, default = (100, 100)
+       size of the box 
+
+    
+    Returns
+    --------
+    df :  numpy array with shape = (ntimes, nrows, ncols)
+       Lagrangian change of a field
     '''
-
+    
 
     # get dimensions ................................................
     ntime, nrow, ncol = f3d.shape
@@ -154,8 +173,7 @@ def semi_Lagrangian_change4tstack(f3d,
        
         print '... calculate change for %d' % itime
         df.append( Lagrangian_change(f1, f2, 
-                                        bsize = bsize,
-                                        tracer_field = tracer_sub) ) 
+                                        bsize = bsize) )
 
     df = np.dstack( df ).transpose(2,0,1)
 
@@ -171,12 +189,12 @@ def semi_Lagrangian_change4tstack(f3d,
         df = np.row_stack([dfl, dfc, dfr])
 
     return df
-
+                   
         
 ######################################################################
 ######################################################################
 
-
+                
 def cutout_registered_box(f, ind0, bsize,
                             cmethod = 'register',
                             nstep = 1,
@@ -190,22 +208,52 @@ def cutout_registered_box(f, ind0, bsize,
     It uses image registration method to find shift with maximum cross-correlation.
 
 
-    INPUT
-    =====
-    f: 3d field (time axis at 1st dimension, time array centered around considered time)
-    ind0: center index (conserved for central time index)
-    bsize: box size
+    Parameters
+    ----------
+    f : numpy array
+       3d field (time axis at 1st dimension, time array centered around considered time)
+    
+    ind0 : tuble or list of two values 
+       center index (irow0, icol0)  (conserved for central time index)
 
-    Niter: optional, number of iterations for successive registrations
-    fmin: optional, minimum threshold for data (assumes mountains not valleys in data)
-    regist_method: optional, method to choose for registration, 
-                   e.g., average vs. individual index shift
+    bsize : int
+       box size
+    
+    cmethod : string, optional, default = 'register'
+       method to do the registration, 
+       needed in function get_tube_shift_from_registration
+
+    nstep : int, optional, default = 1
+       determines which fields are registered f[itime] and f[itime + nstep]
+
+    Niter : int, optional, default = 3
+        number of iterations for successive registrations
+    
+    itime : int, optional, default = None
+        time index on which registration is based
+        if None, the central time index is chosen
+
+    fmin : float, optional, default = -1e23
+        minimum threshold for data (assumes mountains not valleys in data)
+
+    regist_method : str, optional, default = 'median'
+        method to choose for registration, 
+        e.g., average vs. individual index shift
+
+        regist_method = 'median' - calculates median shift
+        regist_method = 'centered_median' - calculated centered median shift
+        regist_method = 'smoothed_index' - calculates smoothed index with median filter
+        else - take unfiltered shift index
 
 
-    OUTPUT
-    ======
-    ind: index array used for registration, function of time
-    ftube: 3d tube of registered field cutout
+
+    Returns
+    --------
+    ind : numpy array
+        index array used for registration, function of time
+
+    ftube : numpy array
+        3d tube of registered field cutout
     
     '''
 
@@ -301,17 +349,35 @@ def get_tube_shift_from_registration(f3d,
     '''
     Performs fourier shift calculation via image registration.
 
-    INPUT
-    =====
-    f3d: 3d field, 1st dimension is time
+
+    Parameters
+    ----------
+    f3d : numpy array
+        3d field, 1st dimension is time
+
+    cmethod : string, optional, default = 'register'
+        method used for registration
+    
+        cmethod = 'register' - uses skimage registration tool
+        cmethod = 'crosscorr' - uses maximum of cross-correlation matrix
+
+    cumulative : bool, optional, default = True
+        if cumulative index is returned (as track in index space)
+    
+    edge_filter : str, optional, default = None
+        if edge filter is used, only 'Hamming' is implemented
+
+    nstep : int, optional, default = 1
+       determines which fields are registered f[itime] and f[itime + nstep]
 
 
-    OUTPUT
-    ======
-    ishift: cumulated shift index
+    Returns
+    --------
+    s: numpy array
+       cumulated shift index
     '''
 
-
+                   
     ntime, nrows, ncols = f3d.shape
 
     if edge_filter == 'Hamming':
@@ -352,29 +418,65 @@ def get_tube_shift_from_registration(f3d,
         return np.round( s.cumsum(axis=0) ).transpose()
     else:
         return s
-
+                   
 
 ######################################################################
 ######################################################################
 
 
 def whamm(f3d):
+
     '''
     Simple Hamming window implementation for testing purposes.
+
+
+    Parameters
+    ----------
+    f3d: numpy array, 3dim with shape (ntimes, nrows, ncols)
+       input field
+        
+
+    Returns
+    -------
+    f3d_filtered : f3d: numpy array, 3dim with shape (ntimes, nrows, ncols)
+       filtered field
+
     '''
     
     ntime, nrow, ncol = f3d.shape
-
+                   
     f3d_hamm = f3d * hamming_filter(ncol)
 
     f3d_trans = f3d_hamm.transpose(0,2,1) * hamming_filter(nrow)
 
-    return f3d_trans.transpose(0,2,1)
+    f3d_filtered = f3d_trans.transpose(0,2,1)
+
+    return f3d_filtered
 
 ######################################################################
 ######################################################################
 
 def hamming_filter(n, no_edge = True):
+
+    '''
+    Simple implementation of Hamming filter.
+    
+
+    Parameters
+    ----------
+    n : int
+       length of filter array
+
+    no_edge : bool, optional, default = True
+       if False, Hamming filter is made for edge part from 0 .. n/3 and 2/3 .. 1
+
+
+    Returns
+    --------
+    w : numpy array
+       filter array
+    '''
+
 
     if no_edge:
         return np.hamming(n)
@@ -408,15 +510,23 @@ def cross_correlation_matrix(f1, f2, nshift = 3):
     target field f1 and search field f2 which is sequentially 
     shifted.
 
-    INPUT
-    =====
-    f1: target field
-    f2: search field
 
-    OUTPUT
-    ======
-    cc: cross-correlation matrix
+    Parameters
+    ----------
+    f1 : numpy array, 2dim
+       farget field
 
+    f2 : numpy array
+       search field
+
+    nshift : int, optional, default = 3
+       number of shifts applied in hor. and vert. direction
+
+
+    Returns
+    --------
+    cc: numpy array with shape = (2 * nshift + 1, 2 * nshift + 1)
+       cross-correlation matrix
     '''
 
 
@@ -469,14 +579,22 @@ def shift_max_crosscorr(f1, f2, nshift = 3):
     Calculates index shift for maximum cross-correlation.
 
 
-    INPUT
-    =====
-    f1: target field
-    f2: search field
+    Parameters
+    ----------
+    f1 : numpy array, 2dim
+       farget field
 
-    OUTPUT
-    ======
-    ind: index shift
+    f2 : numpy array
+       search field
+
+    nshift : int, optional, default = 3
+       number of shifts applied in hor. and vert. direction
+
+
+    Returns
+    --------
+    ind : tuple of two int
+       index shift
 
     '''
 

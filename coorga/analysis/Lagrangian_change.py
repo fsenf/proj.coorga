@@ -21,16 +21,23 @@ def register_box(f, f2, tracer_field = None):
     the shift is determined.
 
 
-    INPUT
-    =====
-    f: field that is shifted to match the other field
-    f2: target field that is used as template to match field f
-    tracer_field: optional; tuple(t, t2); field on which shift is determined
+    Parameters
+    ----------
+    f1 : numpy array, 2dim
+       field that is shifted to match the other field
+ 
+    f2 : numpy array
+       target field that is used as template to match field f
 
+    tracer_field : tuple of two numpy arrays, optional default = None
+       field on which shift is determined
+       if None, (f1, f2) are used to determine shift
 
-    OUTPUT
-    ======
-    f_trans: shifted field f to match the other field f2
+    
+    Returns
+    --------
+    f_trans :  numpy array, 2dim
+       shifted field f to match the other field f2
     '''
 
     # get the tracer field, default is input field
@@ -74,16 +81,20 @@ def cutout_field_for_subdivision(f, bsize = (100, 100)):
     
     The subdomain is centered in the input field. 
 
-    
-    INPUT
-    =====
-    f: input field
-    bsize: optional, box size tuple
+
+    Parameters
+    ----------
+    f : numpy array, 2dim
+       input field
+
+    bsize : tuple of two int, optional, default = (100, 100)
+       box size tuple
 
 
-    OUTPUT
-    ======
-    fc: cutted field
+    Returns
+    --------
+    fc : numpy array
+       cutted field
     '''
     
     nrow, ncol = f.shape
@@ -120,15 +131,20 @@ def subdivide_field(f, bsize = (100, 100)):
     A field is cutout and reshaped into given, smaler size subdomains.
 
 
-    INPUT
-    =====
-    f: input field
-    bsize: optional, box size tuple
+
+    Parameters
+    ----------
+    f : numpy array, 2dim
+       input field
+
+    bsize : tuple of two int, optional, default = (100, 100)
+       box size tuple
 
 
-    OUTPUT
-    ======
-    fdiv: subdivided field, box dimension are at the end of array
+    Returns
+    --------
+    fdiv : numpy array, 4dim
+        subdivided field, box dimension are at the end of array
     '''
     
     nrow, ncol = f.shape
@@ -149,6 +165,28 @@ def Eulerian_change(f, f2, bsize = (100, 100)):
 
     '''
     Box-average Eulerian change of field.
+
+
+    Parameters
+    ----------
+    f1 : numpy array, 2dim
+       field that is shifted to match the other field
+ 
+    f2 : numpy array
+       target field that is used as template to match field f
+
+    bsize : tuple of two int, optional, default = (100, 100)
+       box size tuple
+
+    tracer_field : tuple of two numpy arrays, optional default = None
+       field on which shift is determined
+       if None, (f1, f2) are used to determine shift
+
+    
+    Returns
+    --------
+    df_euler : numpy array, 2dim, subsampled by bsize
+       Eulerian change field
     '''
 
     
@@ -156,7 +194,9 @@ def Eulerian_change(f, f2, bsize = (100, 100)):
 
     df_sub =  subdivide_field(df, bsize = bsize)
 
-    return df_sub.mean(axis = -1).mean(axis = -1)
+    df_euler = df_sub.mean(axis = -1).mean(axis = -1)
+    
+    return df_euler
 
 
 ######################################################################
@@ -173,16 +213,26 @@ def Lagrangian_change(f, f2, bsize = (100, 100), tracer_field = None):
     (iii) dF = F(x, t + 1) - F(x + dx, t)
 
 
-    INPUT
-    =====
-    f: field to be shifted
-    f2: target field to switch the other field is shifted
-    bsize: optional, box size tuple
+    Parameters
+    ----------
+    f1 : numpy array, 2dim
+       field that is shifted to match the other field
+ 
+    f2 : numpy array
+       target field that is used as template to match field f
 
+    bsize : tuple of two int, optional, default = (100, 100)
+       box size tuple
 
-    OUTPUT
-    ======
-    df: mean Lagrangian change
+    tracer_field : tuple of two numpy arrays, optional default = None
+       field on which shift is determined
+       if None, (f1, f2) are used to determine shift
+
+    
+    Returns
+    --------
+    df : numpy array, 2dim, subsampled by bsize
+       mean Lagrangian change
     '''
  
 
@@ -239,17 +289,22 @@ def semi_Lagrangian_change4tstack(f3d, **kws):
     the difference between a fixed box and its spatially-shifted 
     counterpart is computed.
 
-    INPUT
-    =====
-    f3d: 3d field (1st dimension time)
-    symmetric: optional, if time trend is calculated as average
-                         between forward and backward difference
 
-    OUTPUT
-    ======
-    df: Lagrangian change of a field 
+    Parameters
+    ----------
+    f3d : numpy array, 3dim with shape = (ntimes, nrows, ncols)
+        field on which Lagrangian change is calculated
+ 
+    kws : dict
+        keywords passed to function timechange
+
+    
+    Returns
+    --------
+    df : numpy array, 3dim
+        semi Lagrangian change
+    
     '''
-
 
 
     return timechange(f3d, method = 'Lagrangian', **kws)
@@ -271,15 +326,35 @@ def timechange(f3d,
     the difference between a fixed box and its spatially-shifted 
     counterpart is computed.
 
-    INPUT
-    =====
-    f3d: 3d field (1st dimension time)
-    symmetric: optional, if time trend is calculated as average
-                         between forward and backward difference
 
-    OUTPUT
-    ======
-    df: Lagrangian change of a field 
+    Parameters
+    ----------
+    f3d : numpy array, 3dim with shape = (ntimes, nrows, ncols)
+        field on which Lagrangian change is calculated
+ 
+    method : str, optional, default =' Lagrangian'
+        method used to calculate time change
+    
+        method = 'Lagrangian' - make Lagrangian calculations
+        method = 'Eulerian' - make Eulerian calculations
+
+    tracer_field : tuple of two numpy arrays, optional default = None
+       field on which shift is determined
+       if None, (f1, f2) are used to determine shift
+
+    symmetric : bool, optional, default = True
+       if time trend is calculated from a symmetric combination of forward
+       and backward diffeerences
+
+    bsize : tuple of two int, optional, default = (100, 100)
+       box size tuple
+
+     
+    Returns
+    --------
+    df : numpy array, 3dim
+        temporal trend of field f3d
+    
     '''
 
 
@@ -329,18 +404,42 @@ def timechange(f3d,
 ######################################################################
 ######################################################################
 
-def map_prop_onto_clusterfield(prop, c):
+def map_prop_onto_clusterfield(prop, c, method = 'mean'):
+
+
+    '''
+    Maps a property onto cluster field
+
+
+    Parameters
+    ----------
+    prop : numpy array, 2dim with shape = (nrows, ncols)
+        property field
+ 
+    c : numpy array, 2dim with shape = (nrows, ncols)
+        cell label field
+
+    method : str, optional, default = 'mean'
+        method used to make cell-based statistics, e.g. cell averages
+
+     
+    Returns
+    --------
+    pmean : numpy array, 2dim with shape (nrows, ncols)
+         properties statistics mapped onto the cluster label field
+    
+    '''
+    
 
     cs = seg.sort_clusters(c)
 
     # get pixel sums per object
-    pmean = scipy.ndimage.measurements.mean(prop, 
-                                            labels = cs,  
-                                            index = range(cs.max()+1))
+    if method == 'mean':
+        pmean = scipy.ndimage.measurements.mean(prop, 
+                                                labels = cs,  
+                                                index = range(cs.max()+1))
 
     pmean[0] = 0.
-
-
 
 
     return pmean[cs]
