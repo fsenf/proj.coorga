@@ -1,9 +1,9 @@
 
-
+from coorga._version import __version__
 from setuptools import setup, find_packages
 
 setup(name='coorga',
-      version='0.1.1',
+      version = __version__,
       description='Collection of Convective Organization Tools',
       author='Fabian Senf',
       author_email='senf@tropos.de',
