@@ -10,7 +10,7 @@ import tropy.analysis_tools.grid_and_interpolation as gi
 from  tropy.standard_config import *
 
 from  coorga.inout.cluster_prop_reader import read_cluster_props
-from coorga.metrics.calculate_nn_distance import calculate_nn_distance
+from coorga.metrics.nearest_neighbor_distance import nearest_neighbor_distance as calculate_nn_distance
 from cluster_analysis import create_time_id, remove_too_few_clusters
  
 

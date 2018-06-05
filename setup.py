@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='coorga',
-      version='0.1',
+      version='0.1.1',
       description='Collection of Convective Organization Tools',
       author='Fabian Senf',
       author_email='senf@tropos.de',

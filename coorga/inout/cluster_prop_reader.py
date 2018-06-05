@@ -160,6 +160,71 @@ def read_cluster_props( vlist,
 ######################################################################
 ######################################################################
 
+def read_collected_clusterdata(date = '201608',
+                               expname = 'exp010',
+                               vname = 'smf',
+                               fdir = '%s/cluster_properties' % narval_dir,
+                               bootstrap = False, 
+                               bootstrap_extension_suffix = '_dext500'):
+    
+    '''
+    Calculates average number density.
+    
+
+    Parameters
+    ----------
+    date : str, optional, default = '201608'
+       date or part of date string
+
+    expname : str, optional, default = 'exp010'
+       name for segmentation setup
+
+    vname : str, optional, default = 'smf'
+       name of variable on which cell analysis is based
+
+    fdir : str, optional, default = '%s/cluster_properties' % narval_dir
+       file directory name
+
+    bootstrap : bool, optional, default = False
+       switch if bootrstrap file is used
+
+    bootstrap_extension_suffix : str, optional, default = '_dext500'
+       possible suffix of bootstrap file (could contain ID)
+
+    
+    Returns
+    --------
+    dset : dict of numpy arrays
+       full set of cell properties
+    '''
+    
+
+    # reading the cluster data
+
+    if bootstrap:
+        fname = '%s/bootstrap_collected_cluster_props_%s_%s_%s_%s.h5' % (fdir, 
+                                                                         vname, 
+                                                                         date, 
+                                                                         expname, 
+                                                                         bootstrap_extension_suffix
+        )        
+    else:
+        fname = '%s/collected_cluster_props_%s_%s_%s.h5' % (fdir, 
+                                                            vname, 
+                                                            date, 
+                                                            expname)
+
+    print '...read data from ', fname
+
+    dset = hio.read_dict_from_hdf(fname)
+
+      
+    return dset[vname]
+
+
+#####################################################################
+#####################################################################
+
 
 if __name__ == '__main__':
 

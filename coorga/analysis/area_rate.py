@@ -5,12 +5,12 @@ import os, sys, glob, copy
 import numpy as np
 import scipy.ndimage
 
-import analysis_tools.segmentation as seg
-import analysis_tools.optical_flow as oflow
-import analysis_tools.grid_and_interpolation as gi
+import tropy.analysis_tools.segmentation as seg
+import tropy.analysis_tools.optical_flow as oflow
+import tropy.analysis_tools.grid_and_interpolation as gi
 import mahotas
 
-import io_tools.netcdf as ncio
+import tropy.io_tools.netcdf as ncio
 
 
 

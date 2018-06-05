@@ -10,7 +10,7 @@ import datetime
 
 
 import tropy.analysis_tools.grid_and_interpolation as gi
-import segmentation
+import tropy.analysis_tools.segmentation as seg
 import tropy.io_tools.hdf as hio
 
 from standard_config import *
@@ -348,7 +348,7 @@ if __name__ == "__main__":
             tname = 'thresh_%d' % int(thresh)
 
             # do segmentation ............................................
-            c = segmentation.connectivity_clustering(-bt[n], -thresh)
+            c = seg.connectivity_clustering(-bt[n], -thresh)
 
 
             # cluster analysis and scai calculation ......................
