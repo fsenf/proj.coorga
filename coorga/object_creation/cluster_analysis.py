@@ -444,7 +444,7 @@ def cluster_analysis(din, varname,
     # (3) time loop over segmentation and cell analysis
     #LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
-    for itime in [0, 1]: #range(ntime):
+    for itime in range(ntime):
         
         if verbose:
             print '... calculate cluster properties for %d' % itime
