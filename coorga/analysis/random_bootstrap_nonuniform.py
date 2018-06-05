@@ -96,7 +96,7 @@ def random_field_generator_nonuniform_dist(c,  nd0,
                                                      discrete_version = True)
     
     # get the counter axis in-front
-    random_position = np.array( random_position ).T
+    random_position = np.array( random_position ).T.astype( np.int )
     # ================================================================
 
     
@@ -107,7 +107,7 @@ def random_field_generator_nonuniform_dist(c,  nd0,
 
 
         # (i) cutout cell ............................................
-        ndist = dmin + 2
+        ndist = np.round( dmin + 2 ).astype( np.int )
         ccut = gi.cutout_cluster(cs, cind, nedge = ndist)
         mcut = (ccut == cind)
 
