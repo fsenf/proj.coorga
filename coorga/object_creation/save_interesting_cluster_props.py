@@ -17,7 +17,9 @@ from cluster_analysis import create_time_id, remove_too_few_clusters
 ######################################################################
 ######################################################################
 
-def main(expname, regtype, varname, date, do_output = True):
+def main(expname, regtype, varname, date, 
+         do_output = True, 
+         add_aux_varlist = []):
 
     '''
     Gathers a collection of cell properties for a selected 
@@ -41,6 +43,8 @@ def main(expname, regtype, varname, date, do_output = True):
     do_output: bool, optional, default = True
         switch that determines if output is written in predefined file
 
+    add_aux_varlist : list of strings
+        list of additional auxiliary variable names to be included
 
     Returns
     -------
@@ -150,7 +154,7 @@ def main(expname, regtype, varname, date, do_output = True):
 
 
     # for rain / water column comparison ------------------------------
-    for vname in ['rr', 'tcw', 'imf']:
+    for vname in ['rr', 'tcw', 'imf'] + add_aux_varlist:
         for prop in ['max', 'min', 'mean', 'p10', 'p25', 'p50', 'p75', 'p90']:
             vlist.append( '%s_%s' % (vname, prop) )
     # ================================================================
