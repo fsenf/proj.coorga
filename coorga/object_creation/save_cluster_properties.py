@@ -111,29 +111,3 @@ def main(fname,
 ######################################################################
 
 
-
-
-
-if __name__ == '__main__':
-
-
-    # get input ------------------------------------------------------
-    fname = sys.argv[1]
-        
-
-    # set the segmentation parameters by experient name
-    try:
-        expname = sys.argv[2]
-    except:
-        expname = 'basic'
-
-    # set the variable name
-    try:
-        varname = sys.argv[3]
-    except:
-        varname = 'bt108'
-        
-    # ================================================================
-
-
-    main( fname, expname, varname )

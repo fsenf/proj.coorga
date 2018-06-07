@@ -1,34 +1,89 @@
 #!/usr/bin/env python
 
 import sys
+import argparse
+
 import coorga.object_creation.save_cluster_properties.main as main
 
+######################################################################
+######################################################################
+
+
+def default_settings():
+
+    default_sett = {}
+
+    default_sett['expname'] = 'basic'
+    default_sett['varname'] = 'bt108'
+
+    return default_sett
 
 ######################################################################
 ######################################################################
+
+def print_settings(sett):
+
+    print 'Settings:'
+    for k in sorted(sett.keys()):
+        print '%12s:    %4s' % (k, str(sett[k]))
+
+    print
+    return
+
+######################################################################
+######################################################################
+
+
+
+def option_handling(default):
+
+
+
+    parser = argparse.ArgumentParser(
+    
+        description = 'Creates a Threshold-based Clustering of a Variable Time-Stack from a Given File')
+    
+    parser.add_argument ("filename",
+                        help="name of input file (netcdf) that contains variable for clustering")
+
+    parser.add_argument("-e", "--expname",
+                        default = default['expname'],
+                        type = str,
+                        help="Name of the Predefined Segmentation Setup")
+
+    parser.add_argument("-v", "--varname",
+                        default = default['varname'],
+                        type = str,
+                        help="Name of Variable used in Segmentation")
+
+
+    return vars(parser.parse_args())
+
+
+######################################################################
+######################################################################
+
 
 
 
 if __name__ == '__main__':
 
 
-    # get input ------------------------------------------------------
-    fname = sys.argv[1]
-        
-
-    # set the segmentation parameters by experient name
-    try:
-        expname = sys.argv[2]
-    except:
-        expname = 'basic'
-
-    # set the variable name
-    try:
-        varname = sys.argv[3]
-    except:
-        varname = 'bt108'
-        
+    print 'start clustering calculations at ', datetime.datetime.now()
+ 
+    # option handling ----------------------------------------------------
+    sett = option_handling( default_settings() )
+    print_settings( sett )
     # ================================================================
 
 
+    # get input ------------------------------------------------------
+    fname = sett['filename']
+    expname = sett['expname']
+    varname = sett['varname']
+    # ================================================================
+
+
+    # run the script -------------------------------------------------
     main( fname, expname, varname )
+    # ================================================================

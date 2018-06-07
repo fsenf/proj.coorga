@@ -9,6 +9,7 @@ setup(name='coorga',
       author_email = 'senf@tropos.de',
       license = 'GPL',
       packages = find_packages(),
+      scripts = ['bin/coorga_save_cluster_properties'],
 #['coorga', 'coorga.inout', 'coorga.object_creation', 'coorga.metrics'],
       zip_safe = False)
 
