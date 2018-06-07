@@ -2,9 +2,10 @@
 
 import sys
 import argparse
+import datetime
 
-import coorga.object_creation.save_cluster_properties.main as main
-
+from coorga.object_creation.save_cluster_properties import main
+from  coorga.object_creation.segmentation_config import  predefined_setups,  available_expnames
 ######################################################################
 ######################################################################
 
@@ -15,7 +16,7 @@ def default_settings():
 
     default_sett['expname'] = 'basic'
     default_sett['varname'] = 'bt108'
-
+    default_sett['list'] = False
     return default_sett
 
 ######################################################################
@@ -44,7 +45,8 @@ def option_handling(default):
         description = 'Creates a Threshold-based Clustering of a Variable Time-Stack from a Given File')
     
     parser.add_argument ("filename",
-                        help="name of input file (netcdf) that contains variable for clustering")
+                         nargs="?",
+                         help="name of input file (netcdf) that contains variable for clustering")
 
     parser.add_argument("-e", "--expname",
                         default = default['expname'],
@@ -55,6 +57,12 @@ def option_handling(default):
                         default = default['varname'],
                         type = str,
                         help="Name of Variable used in Segmentation")
+
+    parser.add_argument("-l", "--list",
+                        default = default['list'],
+                        action = 'store_true',
+                        help="Lists predefined experiments")
+
 
 
     return vars(parser.parse_args())
@@ -69,7 +77,6 @@ def option_handling(default):
 if __name__ == '__main__':
 
 
-    print 'start clustering calculations at ', datetime.datetime.now()
  
     # option handling ----------------------------------------------------
     sett = option_handling( default_settings() )
@@ -85,5 +92,14 @@ if __name__ == '__main__':
 
 
     # run the script -------------------------------------------------
-    main( fname, expname, varname )
+    if sett['list']:
+        explist = available_expnames()
+        for expname in explist:
+            print expname
+            print '===================='
+            print_settings( predefined_setups(expname) )
+
+    else:
+        print 'start clustering calculations at ', datetime.datetime.now()
+        main( fname, expname, varname )
     # ================================================================

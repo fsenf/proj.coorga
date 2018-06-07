@@ -13,7 +13,7 @@ from tropy.standard_config import *
 
 # local libs
 from segmentation_config import predefined_setups
-
+from special_threshold_calculations import special_threshold_calculations
 
 ######################################################################
 ######################################################################
@@ -454,7 +454,7 @@ def cluster_analysis(din, varname,
         f = field[itime]
 
         if thresh == 'relative50_for_mass_flux':
-            thresh = special_threshold_calculations(din['lon'], din['lat'], b, 
+            thresh = special_threshold_calculations(din['lon'], din['lat'], f, 
                                                     method = 'relative50_for_mass_flux')
 
         # set masks
