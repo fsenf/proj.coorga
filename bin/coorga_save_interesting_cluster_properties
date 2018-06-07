@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
+import datetime
+
+from coorga.object_creation.save_interesting_cluster_props import main
+from  coorga.object_creation.segmentation_config import  predefined_setups,  available_expnames
+######################################################################
+######################################################################
+
+
+def default_settings():
+
+    default_sett = {}
+
+    default_sett['expname'] = 'basic'
+    default_sett['regtype'] = 'narval'
+    default_sett['varname'] = 'bt108'
+    default_sett['date'] = '201608'
+
+    return default_sett
+
+######################################################################
+######################################################################
+
+def print_settings(sett):
+
+    print 'Settings:'
+    for k in sorted(sett.keys()):
+        print '%12s:    %4s' % (k, str(sett[k]))
+
+    print
+    return
+
+######################################################################
+######################################################################
+
+
+
+def option_handling(default):
+
+
+
+    parser = argparse.ArgumentParser(
+    
+        description = 'Collects an Aanalysis Stack of already generated Cluster Data')
+    
+    # parser.add_argument ("filename",
+    #                      nargs="?",
+    #                      help="name of input file (netcdf) that contains variable for clustering")
+
+    parser.add_argument("-e", "--expname",
+                        default = default['expname'],
+                        type = str,
+                        help="Name of the Predefined Segmentation Setup")
+
+    parser.add_argument("-v", "--varname",
+                        default = default['varname'],
+                        type = str,
+                        help="Name of Variable used in Segmentation")
+
+    parser.add_argument("-r", "--regtype",
+                        default = default['regtype'],
+                        type = str,
+                        help="Selected Region for Analysis")
+
+    parser.add_argument("-d", "--date",
+                        default = default['date'],
+                        type = str,
+                        help="Date String that defines Time Range")
+
+    parser.add_argument("-c", "--collection",
+                        default = None,
+                        type = str,
+                        help="Name of a Collection File")
+
+
+
+    # parser.add_argument("-l", "--list",
+    #                     default = default['list'],
+    #                     action = 'store_true',
+    #                     help="Lists predefined experiments")
+
+
+
+    return vars(parser.parse_args())
+
+
+######################################################################
+######################################################################
+
+
+
+
+if __name__ == '__main__':
+
+
+ 
+    # option handling ----------------------------------------------------
+    sett = option_handling( default_settings() )
+    print_settings( sett )
+    # ================================================================
+
+
+    # get input ------------------------------------------------------
+    expname = sett['expname']
+    varname = sett['varname']
+    regtype = sett['regtype']
+    date = sett['date']
+    # ================================================================
+
+
+    # run the script -------------------------------------------------
+    print 'start clustering calculations at ', datetime.datetime.now()
+    main( expname, regtype, varname, date )
+    # ================================================================

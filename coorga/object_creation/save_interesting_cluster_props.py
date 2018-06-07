@@ -12,12 +12,13 @@ from  tropy.standard_config import *
 from  coorga.inout.cluster_prop_reader import read_cluster_props
 from coorga.metrics.nearest_neighbor_distance import nearest_neighbor_distance as calculate_nn_distance
 from cluster_analysis import create_time_id, remove_too_few_clusters
- 
+from segmentation_config import  predefined_collections
 
 ######################################################################
 ######################################################################
 
 def main(expname, regtype, varname, date, 
+         collection = None,
          do_output = True, 
          add_aux_varlist = []):
 
@@ -39,12 +40,17 @@ def main(expname, regtype, varname, date,
 
     date : string, typically in format %Y%m
         string that specifies the date or part of the date
+    
+    collection : tuple, optional, default = None
+        if None: predefined collection is generated based on arguments
+        else: arguments are IGNORED
 
     do_output: bool, optional, default = True
         switch that determines if output is written in predefined file
 
     add_aux_varlist : list of strings
         list of additional auxiliary variable names to be included
+
 
     Returns
     -------
@@ -53,75 +59,18 @@ def main(expname, regtype, varname, date,
 
 
     '''
-
-    # select file parameters -----------------------------------------
-    if regtype == 'narval' and varname == 'bt108':
-        
-        ftype_combinations = [  ('msevi', 'obs'),  
-                                ('synsat', 'sim'),
-                                ('trans', 'trans')]
-
-        narval_dir = '%s/icon/narval/synsat/' % local_data_path
-
-        kws = dict(
-            filepart = '_narval_DOM01_',
-            fdir = '%s/cluster_properties' % narval_dir,
-            date = date)
-
-        addlist = ['fraction_of_lsm_types', ]
-
-
-    elif regtype == 'narval' and varname in ['smf', 'rr', 'imf']:
-        
-        ftype_combinations = [  ('icon-narval', varname) ] 
-
-
-        kws = dict(
-            filepart = '_dom01_%s_' % varname,
-            fdir = '%s/icon/narval/variables/cluster_properties'  % local_data_path,
-            date = date)
-
-        addlist = ['fraction_of_lsm_types', ]
-
-
-    elif regtype == 'hdcp2':
-
-        ftype_combinations = [('hdfd', 'obs'),]
-
-        
-
-        kws = dict(
-            filepart = '_trop_seviri',
-            time_masking = False,
-            fdir = '%s/hdcp2/cluster_properties' % local_data_path,
-            date = date,
-            )
-
-        addlist = []
-
-
-    elif regtype == 'icon-lem':
-
-        ftype_combinations = [('msevi', 'msevi'),
-                              ('synsat1', 'synsat1'),
-                              ('synsat2', 'synsat2'),
-                              ('synsat3', 'synsat3')]
-
-        
-
-        kws = dict(
-            filepart = '_3d_coarse_icon-lem-tstack_DOM',
-            time_masking = False,
-            fdir = '%s/icon/lem-de/cluster_properties' % local_data_path,
-            date = date,
-            )
-
-        addlist = []
-
-
-
     # ================================================================
         
+
+
+    # check if predefined collection should be used ------------------
+    if collection is None:
+        ftype_combinations, kws, addlist = predefined_collections(
+            regtype, varname, date)
+    else:
+        ftype_combinations, kws, addlist = collection
+    # ================================================================
+
 
 
     # variables list -------------------------------------------------
@@ -211,34 +160,3 @@ def main(expname, regtype, varname, date,
 
 ######################################################################
 ######################################################################
-
-if __name__ == '__main__':
-
-    # possible inputs ------------------------------------------------
-    try:
-        expname = sys.argv[1]
-    except:
-        expname = 'basic'
-
-
-    try: 
-        regtype = sys.argv[2]
-    except:
-        regtype = 'narval'
-
-
-    try: 
-        varname = sys.argv[3]
-    except:
-        varname = 'imf'
-
-
-    try:
-        date = sys.argv[4]
-    except:
-        date = '201608'
-    # ================================================================
-
-
-    main(expname, regtype, varname, date)
-
