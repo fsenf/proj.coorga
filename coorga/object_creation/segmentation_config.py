@@ -192,8 +192,8 @@ def predefined_collections(regtype, varname, date):
 
         kws = dict(
             filepart = '_dom01_%s_' % varname,
-            # fdir = '%s/icon/narval/variables/cluster_properties'  % local_data_path,
-            fdir = '%s/icon/narval/var4workflowtest/cluster_properties'  % local_data_path,
+            fdir = '%s/icon/narval/variables/cluster_properties'  % local_data_path,
+            # fdir = '%s/icon/narval/var4workflowtest/cluster_properties'  % local_data_path,
             date = date)
 
         addlist = ['fraction_of_lsm_types', ]

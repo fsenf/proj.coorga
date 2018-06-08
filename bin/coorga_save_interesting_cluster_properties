@@ -6,6 +6,8 @@ import datetime
 
 from coorga.object_creation.save_interesting_cluster_props import main
 from  coorga.object_creation.segmentation_config import  predefined_setups,  available_expnames
+from coorga.inout.config_inout import read_cluster_collection_config
+
 ######################################################################
 ######################################################################
 
@@ -18,6 +20,7 @@ def default_settings():
     default_sett['regtype'] = 'narval'
     default_sett['varname'] = 'bt108'
     default_sett['date'] = '201608'
+    default_sett['collection'] = None
 
     return default_sett
 
@@ -111,7 +114,17 @@ if __name__ == '__main__':
     # ================================================================
 
 
+    # get user defined collection ------------------------------------
+    if sett['collection'] is not None:
+        cname = sett['collection']
+        collection = read_cluster_collection_config( cname )
+    else:
+        collection = None
+    # ================================================================
+
+
     # run the script -------------------------------------------------
     print 'start clustering calculations at ', datetime.datetime.now()
-    main( expname, regtype, varname, date )
+    main( expname, regtype, varname, date,
+                collection = collection )
     # ================================================================
