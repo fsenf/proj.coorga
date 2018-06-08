@@ -153,6 +153,8 @@ def single_cell_analysis(dset,
     # and cell coordinates
     xc =  dset['x'][mask]
     yc =  dset['y'][mask]
+    lonc = dset['lon'][mask]
+    latc = dset['lat'][mask]
 
     # area and land-sea-coast mask
     ac = dset['area'][mask]
@@ -170,7 +172,7 @@ def single_cell_analysis(dset,
     cset['x_mean'] = xc.mean()
     cset['y_mean'] = yc.mean()
     
-    cset['lon_mean'], cset['lat_mean'] = gi.xy2ll(cset['x_mean'], cset['y_mean'])
+    cset['lon_mean'], cset['lat_mean'] = lonc.mean(), latc.mean()
 
     for vname in var_names:
         cset['%s_mean' % vname] =   vc[vname].mean()

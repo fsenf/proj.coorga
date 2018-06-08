@@ -261,7 +261,8 @@ def read_narval_data(fname):
     geo = hio.read_dict_from_hdf(gfile)
     lon, lat = geo['lon'], geo['lat']
 
-    x,y = gi.ll2xy(lon, lat)
+    # centered sinusoidal
+    x, y = gi.ll2xyc( lon, lat )
     area = np.abs( gi.simple_pixel_area(lon, lat) )
     # ================================================================
 
@@ -349,7 +350,7 @@ def read_narval_addvars(fname, vname):
     geo = hio.read_dict_from_hdf(gfile)
     lon, lat = geo['lon'], geo['lat']
 
-    x,y = gi.ll2xy(lon, lat)
+    x,y = gi.ll2xyc(lon, lat)
     area = np.abs( gi.simple_pixel_area(lon, lat) )
     # ================================================================
 
@@ -408,7 +409,7 @@ def read_hdcp2_data(fname):
     # geo ref --------------------------------------------------------
     lon, lat = dset['lon'], dset['lat']
     
-    x,y = gi.ll2xy(lon, lat)
+    x,y = gi.ll2xyc(lon, lat, lon0 = 10, lat0 = 50)
     area = np.abs( gi.simple_pixel_area(lon, lat) )
     # ================================================================
 
@@ -471,7 +472,7 @@ def read_icon_lem_data(fname):
     # geo ref --------------------------------------------------------
     lon, lat = dset['lon'], dset['lat']
     
-    x,y = gi.ll2xy(lon, lat)
+    x,y = gi.ll2xyc(lon, lat, lon0 = 10, lat0 = 50)
     area = np.abs( gi.simple_pixel_area(lon, lat) )
     # ================================================================
 
