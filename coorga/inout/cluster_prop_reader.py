@@ -38,6 +38,56 @@ narval_dir = '%s/icon/narval' % local_data_path
 ######################################################################
 ######################################################################
 
+def params_from_clustname(clustfile):
+
+    '''
+    Reads parameters from standardized cluster filename.
+
+    Assumes that date is in the filename and the only int part and the following
+    format: *{vname}_{date}_{expname}*
+
+
+    Parameters
+    -----------
+    clusterfile : str
+        clusterfile name
+
+
+    Returns
+    --------
+    vname : str
+        variable name
+
+    date : int
+        date 
+
+    expname : str
+        name of segmentation setup
+    '''
+
+    # dissect into pieces
+
+    basename = os.path.splitext( os.path.basename( clustfile) )[0]
+    name_vec = basename.split('_')
+
+    # get the date
+    for i, entry in enumerate( name_vec ):
+        try:
+            date = int(entry)
+            idate = i
+        except:
+            pass
+    
+    # get the others
+    vname = name_vec[idate - 1]
+    expname = name_vec[idate + 1]
+
+    return vname, date, expname
+
+######################################################################
+######################################################################
+
+
 
 def read_cluster_props( vlist,
                         ftype = 'msevi',

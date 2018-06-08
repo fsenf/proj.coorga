@@ -16,7 +16,6 @@ def default_settings():
 
     default_sett = {}
 
-    default_sett['expname'] = 'basic'
     default_sett['regtype'] = 'narval'
     default_sett['varname'] = 'bt108'
     default_sett['date'] = '201608'
@@ -53,8 +52,7 @@ def option_handling(default):
     #                      nargs="?",
     #                      help="name of input file (netcdf) that contains variable for clustering")
 
-    parser.add_argument("-e", "--expname",
-                        default = default['expname'],
+    parser.add_argument("expname",
                         type = str,
                         help="Name of the Predefined Segmentation Setup")
 
@@ -120,6 +118,8 @@ if __name__ == '__main__':
         collection = read_cluster_collection_config( cname )
     else:
         collection = None
+
+    print collection
     # ================================================================
 
 
