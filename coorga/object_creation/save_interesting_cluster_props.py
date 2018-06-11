@@ -69,6 +69,10 @@ def main(expname, regtype, varname, date,
             regtype, varname, date)
     else:
         ftype_combinations, kws, addlist = collection
+
+        date = kws['date']
+        regtype = kws.pop('regtype')
+        varname = kws.pop('varname')
     # ================================================================
 
 
@@ -149,7 +153,7 @@ def main(expname, regtype, varname, date,
     # save stuff into hdf --------------------------------------------
     if do_output:
         fdir = kws['fdir']
-        oname = '%s/collected_cluster_props_%s_%s_%s.h5' % (fdir,  varname, date, expname)
+        oname = '%s/collected_cluster_props_%s_%s_%s.h5' % (fdir, varname, date, expname)
         print '... save data to %s' % oname
         hio.save_dict2hdf(oname, out)
     # ================================================================
