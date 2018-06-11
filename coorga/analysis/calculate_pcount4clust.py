@@ -5,18 +5,21 @@ import os, sys, glob
 import numpy as np
 import scipy.ndimage
 
+from get_cluster_id import get_cluster_id
+
 import tropy.analysis_tools.grid_and_interpolation as gi
-from coorga.metrics.pair_correlation_function import radius_ring_edges, pairCorrelationFunction_2D
+from coorga.metrics.pair_correlation_function import radius_ring_edges
 
+from camocapy.mc_tools import calculate_inner_pairnumbers
 
 ######################################################################
 ######################################################################
 
-def calculate_pcf4clust( c, egrid, nd_ref, 
-                         weight = 1., 
-                         rMax = 500., 
-                         dr = 20.,
-                         verbose = False):
+def calculate_pcount4clust( c, vname, variable_set, 
+                            pcount_name = 'pcount', 
+                            rMax = 500., 
+                            dr = 20.,
+                            verbose = False):
 
 
     '''
@@ -28,16 +31,11 @@ def calculate_pcf4clust( c, egrid, nd_ref,
     c : dict
         set o cluster properties
 
-    egrid : tuple or list of two numpy arrays
-        edge-based grid of reference number density
+    vname : str
+        name of variable used for categorization
 
-    nd_ref : numpy array, 2dim
-        reference number density
-
-    weight : float, optional, default = 1.
-        weight between equi-distant and equal-area range binning
-        0 = equal-area
-        1 = equi-distant
+    variable_set : list
+        list of variable bins
 
     rMax : float, optional, default = 500.
         largest range bin
@@ -66,6 +64,15 @@ def calculate_pcf4clust( c, egrid, nd_ref,
     xt, yt = c['x_mean'], c['y_mean']
     # ================================================================
 
+    
+    # get ids --------------------------------------------------------
+    var = c[vname]
+    full_ids = get_cluster_id(var, variable_set)
+    nvar_bins = len( variable_set )
+
+    Ncomponent = nvar_bins - 1
+    # ================================================================
+
 
     # loop over all time ids -----------------------------------------
     if 'time_id' in c.keys():
@@ -75,36 +82,40 @@ def calculate_pcf4clust( c, egrid, nd_ref,
 
     time_ids = sorted( set(c[tname]) )
     
-    rbins = radius_ring_edges(rMax, dr, weight = weight)
-    nbins = len(rbins)
+    nbins = int(Rmax / dr) + 1 
 
-    
-    
-    c['pcf'] = np.nan * np.ma.ones( (ncells, nbins - 1) )
-    
+    c[pcount_name] = np.nan * np.ma.ones((ncells, Ncomponent, nbins))
+
 
     for tid in time_ids:
 
         # masking 
         m = (c[tname] == tid) 
         ccount = m.sum()
-        # ccount_inside_region = (m & rmask).sum()
 
+        labels = np.arange(ccount)
+
+
+        # ccount_inside_region = (m & rmask).sum()
         pos = np.array([xt[m], yt[m]]).T
+        ids = full_ids[m]
+
+
 
         if verbose:
             print tid, m.sum()
 
-        # pair-correlation analysis with variable BG density
-        gfull, g, rbins, indices = pairCorrelationFunction_2D(pos, egrid, nd_ref, rMax, dr, weight = weight)
+        # get particle count matrix
+        rbins, pcount = calculate_inner_pairnumbers(pos, ids, labels, rMax, 
+                                                    dr = dr, 
+                                                    Ncomponent = Ncomponent)
 
-        gfull_with_edge = np.nan *  np.ma.ones( (ccount, nbins - 1) )
-        gfull_with_edge[indices] = gfull
-        c['pcf'][m] = gfull_with_edge
-
-
-    c['pcf'] = np.ma.masked_invalid( c['pcf'] )
-    c['rbins_pcf'] = rbins
+        c[pcount_name][m] = pcount.transpose(1, 0, 2)
+    
+    c['%s_bins' % pcount_name] = rbins
+    c['%s_variable_set' % pcount_name] = variable_set
+    c['%s_variable_name' % pcount_name] = vname
+    c['%s_ids' % pcount_name] = full_ids
     # ================================================================
 
 
