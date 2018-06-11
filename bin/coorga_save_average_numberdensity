@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
+import datetime
+
+from coorga.inout.cluster_prop_reader import  read_collected_clusterdata
+from coorga.analysis.average_numberdensity import calculate_average_numberdensity
+
+import tropy.io_tools.hdf as hio
+from tropy.standard_config import *
+
+######################################################################
+######################################################################
+
+def default_settings():
+
+    default_sett = {}
+
+    default_sett['fdir'] =   '%s/icon/narval/variables/cluster_properties' % local_data_path
+
+    return default_sett
+
+######################################################################
+######################################################################
+
+
+
+def option_handling(default):
+
+
+
+    parser = argparse.ArgumentParser(
+    
+        description = 'Outputs the average number density field')
+    
+
+    parser.add_argument("date",
+                        type = str,
+                        help="Date String that defines Time Range")
+
+    parser.add_argument("expname",
+                        type = str,
+                        help="Name of the Predefined Segmentation Setup")
+
+
+    parser.add_argument("varname",
+                        type = str,
+                        help="Name of Variable used in Segmentation")
+
+    parser.add_argument("-d", "--fdir",
+                        default = default['fdir'], 
+                        type = str,
+                        help="Name of Input File Directory")
+
+
+
+    return vars(parser.parse_args())
+
+
+######################################################################
+######################################################################
+
+
+
+
+if __name__ == '__main__':
+
+
+ 
+    # option handling ----------------------------------------------------
+    sett = option_handling( default_settings() )
+    # ================================================================
+
+
+    # get input ------------------------------------------------------
+    date = sett['date']
+    expname = sett['expname']
+    vname = sett['varname']
+    fdir = sett['fdir']
+
+    kws = dict( date = date, expname = expname, vname = vname, fdir = fdir)
+    # ================================================================
+
+    
+    # input data -----------------------------------------------------
+    d = read_collected_clusterdata( **kws )
+    # ================================================================
+
+
+    # calculate ND ---------------------------------------------------
+    egrid, nd0  = calculate_average_numberdensity(d)
+    # ================================================================
+
+
+    # output ---------------------------------------------------------
+    fname = '%s/average_number_density_narval_%s_%s_%s.h5' % (fdir, vname, date, expname)
+            
+    dset = {}
+    dset['xgrid'] = egrid[0]
+    dset['ygrid'] = egrid[1]
+    dset['number_density'] = nd0
+
+    print '... save data to %s' % fname
+    hio.save_dict2hdf(fname, dset)
+    # ================================================================
