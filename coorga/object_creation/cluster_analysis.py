@@ -189,6 +189,7 @@ def single_cell_analysis(dset,
     cset['abs_time'] = dset['abs_time']
     cset['rel_time'] = dset['rel_time'] 
     cset['loc_time'] = dset['rel_time'] +  cset['lon_mean'] * 24. / 360.
+    cset['index_time'] = dset['index_time']
     # ================================================================
 
 
@@ -501,6 +502,7 @@ def cluster_analysis(din, varname,
         
         dset['rel_time'] = din['rel_time'][itime]
         dset['abs_time'] = din['abs_time'][itime]
+        dset['index_time'] = din['index_time'][itime]
         
 
 

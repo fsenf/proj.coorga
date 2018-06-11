@@ -247,7 +247,7 @@ def read_narval_data(fname):
 
     # prepare time vector --------------------------------------------
     rel_time = np.arange(1, ntime + 1)
-
+    index_time = np.arange(ntime)
 
     day_shift = t0 - datetime.datetime(1970, 1,1)
     day_shift = day_shift.total_seconds() / (24.*3600)
@@ -270,8 +270,8 @@ def read_narval_data(fname):
 
     # prepare output .................................................
     dset = {}
-    vnames = ['x', 'y', 'lon', 'lat', 'lsm', 'area', 'rel_time', 'abs_time']
-    vvec   = [ x ,  y ,  lon ,  lat ,  lsm ,  area ,  rel_time ,  abs_time ]
+    vnames = ['x', 'y', 'lon', 'lat', 'lsm', 'area', 'rel_time', 'abs_time', 'index_time']
+    vvec   = [ x ,  y ,  lon ,  lat ,  lsm ,  area ,  rel_time ,  abs_time ,  index_time]
     for i, vname in enumerate(vnames):
         dset[vname] = vvec[i]
 
@@ -336,6 +336,8 @@ def read_narval_addvars(fname, vname):
 
     # prepare time vector --------------------------------------------
     rel_time = np.arange(1, ntime + 1)
+    index_time = np.arange(ntime)
+
 
 
     day_shift = t0 - datetime.datetime(1970, 1,1)
@@ -360,8 +362,8 @@ def read_narval_addvars(fname, vname):
     dset = {}
     dset[vname] = b3d
 
-    addnames = ['x', 'y', 'lon', 'lat', 'lsm', 'area', 'rel_time', 'abs_time']
-    vvec   = [ x ,  y ,  lon ,  lat ,  lsm ,  area ,  rel_time ,  abs_time ]
+    addnames = ['x', 'y', 'lon', 'lat', 'lsm', 'area', 'rel_time', 'abs_time', 'index_time']
+    vvec     = [ x ,  y ,  lon ,  lat ,  lsm ,  area ,  rel_time ,  abs_time ,  index_time]
     for i, aname in enumerate(addnames):
         dset[aname] = vvec[i]
 
@@ -417,12 +419,15 @@ def read_hdcp2_data(fname):
     # time conversions -----------------------------------------------
     abs_time = dset['time'] / (3600. * 24 )
     rel_time = np.mod(abs_time, 1) * 24.
+
+    ntime = len(rel_time)
+    index_time = np.arange(ntime)
     # ================================================================
     
 
     # prepare output .................................................
-    vnames = ['x', 'y', 'area', 'rel_time', 'abs_time']
-    vvec   = [ x ,  y ,  area ,  rel_time ,  abs_time ]
+    vnames = ['x', 'y', 'area', 'rel_time', 'abs_time', 'index_time']
+    vvec   = [ x ,  y ,  area ,  rel_time ,  abs_time ,  index_time]
     for i, vname in enumerate(vnames):
         dset[vname] = vvec[i]
 
@@ -480,6 +485,9 @@ def read_icon_lem_data(fname):
     # time conversions -----------------------------------------------
     rel_time = 24 * (dset['time'] - dset['time'][0])
 
+    ntime = len(rel_time)
+    index_time = np.arange(ntime)
+ 
     t0 = datetime.datetime(1970, 1, 1)
     abs_time = []
     for t in dset['time']:
@@ -498,8 +506,8 @@ def read_icon_lem_data(fname):
     
 
     # prepare output .................................................
-    vnames = ['x', 'y', 'area', 'rel_time', 'abs_time']
-    vvec   = [ x ,  y ,  area ,  rel_time ,  abs_time ]
+    vnames = ['x', 'y', 'area', 'rel_time', 'abs_time', 'index_time']
+    vvec   = [ x ,  y ,  area ,  rel_time ,  abs_time ,  index_time]
     for i, vname in enumerate(vnames):
         dset[vname] = vvec[i]
 
