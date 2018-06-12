@@ -19,7 +19,8 @@ import cluster_analysis
 def main(fname, 
          expname = 'basic', 
          varname = 'bt108',
-         do_output = True):
+         do_output = True,
+         output_dir = None):
 
     '''
     Performed all the cluster analysis steps.
@@ -33,12 +34,14 @@ def main(fname,
     expname : str, optional, default = 'basic'
         name of the experiment (segmentation setup)
 
-    varname: str, optional, default = 'bt108'
+    varname : str, optional, default = 'bt108'
        analysis variable name that is read from fname
 
-    do_output: bool, optional, default = True
+    do_output : bool, optional, default = True
         switch that determines if output is written in predefined file
     
+    output_dir : str, optional, default = None
+        name of output directory
 
     Returns
     -------
@@ -79,13 +82,16 @@ def main(fname,
         out = cset
         out['_settings'] = setup_for_later_output
      
-     
+    
+        if output_dir is None:
+            odir = '%s/cluster_properties' % din['input_dir']
+        else:
+            odir = output_dir
+
         if USE_EXISTING_CLUSTER_DATA:
             fname = din.pop('fname', fname)
         basename = os.path.splitext(os.path.basename(fname))[0]    
         
-        output_dir = din['input_dir']
-        odir = '%s/cluster_properties' % output_dir
         oname = '%s/clust_prop_%s_%s.h5' % (odir, basename, expname)
         print '... save output to %s' % oname
         hio.save_dict2hdf(oname, out)
@@ -98,7 +104,6 @@ def main(fname,
             out['_settings'] = setup_for_later_output
             
             
-            odir = '%s/cluster_properties' % output_dir
             oname = '%s/segmented_%s_%s.h5' % (odir, basename, expname)
             print '... save output to %s' % oname
             hio.save_dict2hdf(oname, out)

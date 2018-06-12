@@ -46,7 +46,7 @@ def option_handling(default):
 
     parser = argparse.ArgumentParser(
     
-        description = 'Collects an Aanalysis Stack of already generated Cluster Data')
+        description = 'Collects an Analysis Stack of already generated Cluster Data')
     
     # parser.add_argument ("filename",
     #                      nargs="?",
@@ -76,6 +76,15 @@ def option_handling(default):
                         type = str,
                         help="Name of a Collection File")
 
+    parser.add_argument("--output_file",
+                        default = None,
+                        type = str,
+                        help="Name of Output File")
+
+    parser.add_argument("--input_files",
+                        default = None,
+                        type = str,
+                        help="List of Input File")
 
 
     # parser.add_argument("-l", "--list",

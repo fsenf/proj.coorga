@@ -327,7 +327,7 @@ def read_narval_addvars(fname, vname):
     date = basename.split('_')[-1]
     t0 = datetime.datetime.strptime(date, '%Y%m%d')
 
-    b3d = ncio.read_icon_4d_data(fname, vname, itime = None)[vname]
+    b3d = ncio.read_icon_4d_data(fname, [vname,], itime = None)[vname]
     b3d = np.ma.masked_invalid( b3d )
 
     ntime, nrow, ncol = b3d.shape

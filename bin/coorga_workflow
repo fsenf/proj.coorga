@@ -1,0 +1,191 @@
+#!/usr/bin/env python
+
+
+import os, sys, glob
+import argparse
+from coorga.inout.config_inout import json2dict 
+import coorga.object_creation.save_cluster_properties as save_cluster_properties
+import coorga.object_creation.save_collection as save_collection
+
+######################################################################
+######################################################################
+
+
+def default_settings():
+
+    default_sett = {}
+
+    default_sett['no_clustering'] = False
+    default_sett['no_collection'] = False
+
+    
+    return default_sett
+
+######################################################################
+######################################################################
+
+def option_handling(default):
+
+
+
+    parser = argparse.ArgumentParser(
+    
+        description = 'Performs the full Cluster-Analysis Workflow for a Set of Files')
+    
+    parser.add_argument ("filename",
+                         help="name of the json file containing configuration")
+
+    parser.add_argument("--no_clustering",
+                        default = default['no_clustering'],
+                        action = 'store_true',
+                        help="Switch clustering off")
+
+
+    parser.add_argument("--no_collection",
+                        default = default['no_collection'],
+                        action = 'store_true',
+                        help="Switch collection gathering off")
+
+
+    return vars(parser.parse_args())
+
+
+######################################################################
+######################################################################
+
+def resolve_config(config, N = 10):
+
+    '''
+    Trys to resolve config strings.
+
+    Parameters
+    ----------
+    config : dict
+        configuration dictionary
+
+
+    N : int, optional default = 10
+        number of iterations (fixed)
+    '''
+    for i in range(N):
+        for k in config.keys():
+            config[k] = config[k].format( **config )
+
+    return
+
+######################################################################
+######################################################################
+
+
+def make_cluster_analysis( config ):
+
+    '''
+    Performs Cluster Analysis.
+
+    Parameters
+    ----------
+    config : dict
+        set of workflow configuration parameters
+
+    '''
+
+    print
+    print 'Run Cluster Analysis'
+    print '####################'
+    
+    # prepare options
+    sett = dict(do_output = True)   
+    for key in ['varname', 'expname', 'output_dir']:
+        sett[key] = config[key].format(**config)
+    
+    # get filelist
+    fnames = '{input_dir}/{input_files}'.format( **config ) 
+    filelist = glob.glob( fnames.format( **config ) )
+
+    for fname in filelist:
+
+        save_cluster_properties.main( fname, **sett)
+
+    print
+
+    return
+
+######################################################################
+######################################################################
+
+def make_cluster_collection(config):
+
+    '''
+    Gathers a Cluster Collection.
+
+    Parameters
+    ----------
+    config : dict
+        set of workflow configuration parameters
+
+    '''
+
+    print
+    print 'Gather Cluster Collection'
+    print '#########################'
+   
+
+    # get options
+    resolve_config( config )
+    expname = config['expname']
+    collection_file = config['collection_file']
+    odir = config['output_dir']
+
+    # get filelist
+    fnames = '{input_dir}/{input_files}'.format( **config ) 
+    filelist = glob.glob( fnames.format( **config ) )
+    
+    cluster_list = []
+
+    for fname in filelist:
+
+        basename = os.path.splitext(os.path.basename(fname))[0]
+        clustname = '%s/clust_prop_%s_%s.h5' % (odir, basename, expname)
+
+        cluster_list.append( clustname )
+
+    save_collection.main( cluster_list, output_file = collection_file)
+
+    print
+
+    return
+
+   
+
+if __name__ == '__main__':
+
+ 
+    # option handling ----------------------------------------------------
+    sett = option_handling( default_settings() )
+    # ================================================================
+
+    
+    # read configuration ---------------------------------------------
+    workflow_config = json2dict( sett['filename'] )
+    # ================================================================
+
+
+    # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (1) Cluster Analysis per File
+    # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    if not sett['no_clustering']:
+        make_cluster_analysis( workflow_config )
+
+
+    # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (3) Cluster Collections
+    # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    if not sett['no_collection']:
+        make_cluster_collection( workflow_config )
+
+
+######################################################################
+######################################################################
+
+
+

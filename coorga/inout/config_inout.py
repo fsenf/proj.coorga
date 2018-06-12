@@ -40,15 +40,40 @@ def write_cluster_collection_config(*args, **kwargs):
 
     # do output ------------------------------------------------------
     print 'output collection config into ', fname
-    
-    with open(fname, "w") as write_file:
-        json.dump(coll, write_file, indent = 4)
-
+    dict2json( fname, coll)    
 
     return
 
 ######################################################################
 ######################################################################
+
+def json2dict( fname ):
+
+    '''
+    Reads a Json File.
+
+
+    Parameters
+    ----------
+    fname : str
+        input filename
+
+
+    Returns
+    --------
+    d : dict
+        content of json as dict
+
+    '''
+
+    with open(fname, "r") as read_file:
+        d = json.load(read_file)
+
+    return d
+
+######################################################################
+######################################################################
+
 
 def read_cluster_collection_config( fname ):
 
@@ -69,10 +94,35 @@ def read_cluster_collection_config( fname ):
 
     '''
 
-    with open(fname, "r") as read_file:
-        coll = json.load(read_file)
+    return json2dict
 
-    return coll
+######################################################################
+######################################################################
+
+
+def dict2json( fname, d ):
+
+    '''
+    Reads a Config for making a Clustering Collection.
+
+
+    Parameters
+    ----------
+    fname : str
+        input filename
+    d : dict
+        data for output
+
+    Returns
+    --------
+    None
+    '''
+
+    with open(fname, "w") as write_file:
+        json.dump(d, write_file, indent = 4)
+
+
+    return
 
 ######################################################################
 ######################################################################

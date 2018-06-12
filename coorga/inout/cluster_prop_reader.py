@@ -91,6 +91,7 @@ def params_from_clustname(clustfile):
 
 def read_cluster_props( vlist,
                         ftype = 'msevi',
+                        flist = None,
                         expname = 'basic',
                         filepart = '_narval_DOM01_',
                         fdir = '%s/cluster_properties' % narval_dir,
@@ -108,9 +109,11 @@ def read_cluster_props( vlist,
     vlist : list
         list of variables (cell properties)
     
-    
     ftype : str, optional, default = 'msevi'
         file type (or mode) that is used for input, e.g. 'msevi' vs. 'synsat'
+
+    flist : list of str, optional, default = None
+        input file list
 
     expname : str, optional, default = 'basic'
         name of the segmentation setup
@@ -147,9 +150,9 @@ def read_cluster_props( vlist,
     if type(vlist) == type(''):
         vlist = [vlist,]
 
-
-    fname = 'clust_prop_%s%s*%s*_%s.h5' % (ftype, filepart, date, expname)
-    flist = glob.glob('%s/%s' % (fdir, fname))
+    if flist is None:
+        fname = 'clust_prop_%s%s*%s*_%s.h5' % (ftype, filepart, date, expname)
+        flist = glob.glob('%s/%s' % (fdir, fname))
 
     dset = {}
     for f in sorted(flist):

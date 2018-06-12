@@ -17,6 +17,8 @@ def default_settings():
     default_sett['expname'] = 'basic'
     default_sett['varname'] = 'bt108'
     default_sett['list'] = False
+    default_sett['output_dir'] = None
+
     return default_sett
 
 ######################################################################
@@ -57,6 +59,11 @@ def option_handling(default):
                         default = default['varname'],
                         type = str,
                         help="Name of Variable used in Segmentation")
+
+    parser.add_argument("-o", "--output_dir",
+                        default = default['output_dir'],
+                        type = str,
+                        help="Name of Output Directory")
 
     parser.add_argument("-l", "--list",
                         default = default['list'],
@@ -101,5 +108,5 @@ if __name__ == '__main__':
 
     else:
         print 'start clustering calculations at ', datetime.datetime.now()
-        main( fname, expname, varname )
+        main( fname, expname, varname, output_dir = sett['output_dir'] )
     # ================================================================
