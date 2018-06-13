@@ -8,6 +8,8 @@ import coorga.object_creation.save_cluster_properties as save_cluster_properties
 import coorga.object_creation.save_collection as save_collection
 import coorga.object_creation.add_variable2clustdat as add_variable2clustdat
 import coorga.object_creation.save_numberdensity as save_numberdensity
+import coorga.object_creation.save_pair_calculations as save_pair_calculations
+
 
 
 ######################################################################
@@ -58,6 +60,12 @@ def option_handling(default):
                         default = default['no_number_density'],
                         action = 'store_true',
                         help="Switch number density calculation off")
+    
+    parser.add_argument("--no_pair_correlations",
+                        default = False,
+                        action = 'store_true',
+                        help="Switch pair correlation calculation off")
+
 
 
     return vars(parser.parse_args())
@@ -226,7 +234,7 @@ def make_cluster_collection(config):
 
     return
 
- 
+  
 ######################################################################
 ######################################################################
 
@@ -254,6 +262,44 @@ def make_number_density( config ):
     number_density_file = '{number_density_dir}/{number_density_file}'.format( **config )
 
     save_numberdensity.main( collection_file, output_file = number_density_file)
+
+    print
+
+    return
+
+ 
+
+######################################################################
+######################################################################
+
+
+def add_pair_correlations( config ):
+
+    '''
+    Calculates and saves Pair Correlations.
+
+    Parameters
+    ----------
+    config : dict
+        set of workflow configuration parameters
+
+    '''
+
+    print
+    print 'Save Pair Correlations and Counts'
+    print '#################################'
+   
+
+    # get options
+    resolve_config( config )
+    collection_file = '{collection_dir}/{collection_file}'.format( **config )
+    number_density_file = '{number_density_dir}/{number_density_file}'.format( **config )
+
+    pcount_variables = config['pcount_variables']
+    save_pair_calculations.main( collection_file, 
+                                 number_density_file,
+                                 pcount_variables = pcount_variables,
+                                 no_pcf = True)
 
     print
 
@@ -304,6 +350,13 @@ if __name__ == '__main__':
     # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
     if not sett['no_number_density']:
         make_number_density( workflow_config )
+
+    # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (5) Add Pair Correlations
+    # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    if not sett['no_pair_correlations']:
+        add_pair_correlations( workflow_config )
+
 
 
 ######################################################################

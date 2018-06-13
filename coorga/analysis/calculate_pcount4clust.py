@@ -82,7 +82,7 @@ def calculate_pcount4clust( c, vname, variable_set,
 
     time_ids = sorted( set(c[tname]) )
     
-    nbins = int(Rmax / dr) + 1 
+    nbins = int(rMax / dr) + 1 
 
     c[pcount_name] = np.nan * np.ma.ones((ncells, Ncomponent, nbins))
 
