@@ -285,6 +285,41 @@ def read_narval_data(fname):
 ######################################################################
 ######################################################################
 
+def generic_addvar_reader(fname, vname):
+
+    '''
+    Reads the time stack of additional variables.
+
+
+    Parameters
+    ----------
+    fname : str 
+        filename of data file
+    
+    vname : str
+        variable name 
+        (variable should be contained in file)
+
+
+    Returns
+    --------
+    dset : dict
+        dataset dictionary containing georef and add data.
+    '''
+
+    dset = ncio.read_icon_4d_data(fname, [vname,], itime = None)
+
+    geo = ncio.read_icon_georef(fname)
+    geo['x'], geo['y'] = gi.ll2xyc( geo['lon'], geo['lat'] )
+
+    dset.update( geo )
+
+    return dset
+   
+######################################################################
+######################################################################
+
+
 
 def read_narval_addvars(fname, vname):
 

@@ -6,7 +6,7 @@ import scipy.spatial
 
 import tropy.io_tools.hdf as hio
 
-from coorga.inout.data_reader import read_narval_addvars
+from coorga.inout.data_reader import generic_addvar_reader
 
 ######################################################################
 ######################################################################
@@ -93,6 +93,51 @@ def add_variable2clustdat( cset, addvarset, variable_list, nsub = 10 ):
 ######################################################################
 ######################################################################            
 
+def update_clusterfile( clusterfile, varlist, var_filelist):
+
+    '''
+    Adds additional variables to cluster file.
+
+
+    Parameters
+    ----------
+    clusterfile : str
+        filename of clusterfile
+
+    varlist : list of str
+        variable names
+
+    var_filelist : list of str
+        filenames of variable files
+
+
+    Returns
+    -------
+    None
+    '''
+
+    # read cluster data 
+    cset = hio.read_dict_from_hdf( clusterfile )
+
+    # read additional data fields
+    addvar = {}
+    for ivar, vname in enumerate( varlist ):
+        fname = var_filelist[ ivar ]
+        addvarset = generic_addvar_reader(fname, vname)
+        addvar.update( addvarset )
+
+    add_variable2clustdat( cset, addvar, varlist)
+
+    # update cluster data
+    print '... update cluster file %s' % clusterfile
+    hio.update_dict_in_hdf(clusterfile, cset)
+
+    return
+
+######################################################################
+######################################################################            
+
+
 
 
 if __name__ == '__main__':
@@ -106,7 +151,7 @@ if __name__ == '__main__':
     vlist = ['mean_tcwv', 'mean_sst', 'mean_cape', 'max_cape']
     for vname in vlist:
         fname = '/vols/talos/home/fabian/data/icon/narval/variables/icon-narval_dom01_%s_20160801.nc' % vname
-        addvarset = read_narval_addvars(fname, vname)
+        addvarset = generic_addvar_reader(fname, vname)
         addvar.update( addvarset )
 
     add_variable2clustdat( cset, addvar, vlist)

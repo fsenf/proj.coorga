@@ -6,6 +6,9 @@ import argparse
 from coorga.inout.config_inout import json2dict 
 import coorga.object_creation.save_cluster_properties as save_cluster_properties
 import coorga.object_creation.save_collection as save_collection
+import coorga.object_creation.add_variable2clustdat as add_variable2clustdat
+import coorga.object_creation.save_numberdensity as save_numberdensity
+
 
 ######################################################################
 ######################################################################
@@ -17,8 +20,9 @@ def default_settings():
 
     default_sett['no_clustering'] = False
     default_sett['no_collection'] = False
+    default_sett['no_addvars'] = False
+    default_sett['no_number_density'] = False
 
-    
     return default_sett
 
 ######################################################################
@@ -40,11 +44,20 @@ def option_handling(default):
                         action = 'store_true',
                         help="Switch clustering off")
 
-
     parser.add_argument("--no_collection",
                         default = default['no_collection'],
                         action = 'store_true',
                         help="Switch collection gathering off")
+
+    parser.add_argument("--no_addvars",
+                        default = default['no_addvars'],
+                        action = 'store_true',
+                        help="Switch addition of variables off")
+
+    parser.add_argument("--no_number_density",
+                        default = default['no_number_density'],
+                        action = 'store_true',
+                        help="Switch number density calculation off")
 
 
     return vars(parser.parse_args())
@@ -69,8 +82,13 @@ def resolve_config(config, N = 10):
     '''
     for i in range(N):
         for k in config.keys():
-            config[k] = config[k].format( **config )
 
+            s = config[k]
+            try:
+                config[k] = s.format( **config )
+            except:
+                pass # no string argument
+    
     return
 
 ######################################################################
@@ -113,6 +131,59 @@ def make_cluster_analysis( config ):
 ######################################################################
 ######################################################################
 
+
+
+def add_vars2cluster( config ):
+
+    '''
+    Adds addtional Variables to Cluster Files.
+
+    Parameters
+    ----------
+    config : dict
+        set of workflow configuration parameters
+
+    '''
+
+    print
+    print 'Add Variables'
+    print '####################'
+    
+    # get options
+    resolve_config( config )
+    expname = config['expname']
+    odir = config['output_dir']
+    addvar_list = config['addvar_list']
+
+    # gather addvar files
+    addvar_files = {}
+    for addvar_name in addvar_list:
+        addnames = '{addvar_dir}/{addvar_files}'.format( **config ) 
+        addvar_files[addvar_name] = glob.glob( addnames.format( addvar_name = addvar_name, **config ) )
+ 
+    # get filelist
+    fnames = '{input_dir}/{input_files}'.format( **config ) 
+    filelist = glob.glob( fnames.format( **config ) )
+    
+    cluster_list = []
+
+    for i, fname in enumerate( filelist ):
+
+        basename = os.path.splitext(os.path.basename(fname))[0]
+        clustname = '%s/clust_prop_%s_%s.h5' % (odir, basename, expname)
+
+        addfile_list = []
+        for addvar_name in addvar_list:
+            addfile_list.append( addvar_files[addvar_name][i] )
+
+        add_variable2clustdat.update_clusterfile(clustname, addvar_list, addfile_list)
+    print
+
+    return
+
+######################################################################
+######################################################################
+
 def make_cluster_collection(config):
 
     '''
@@ -133,7 +204,7 @@ def make_cluster_collection(config):
     # get options
     resolve_config( config )
     expname = config['expname']
-    collection_file = config['collection_file']
+    collection_file = '{collection_dir}/{collection_file}'.format( **config )
     odir = config['output_dir']
 
     # get filelist
@@ -155,7 +226,44 @@ def make_cluster_collection(config):
 
     return
 
+ 
+######################################################################
+######################################################################
+
+
+def make_number_density( config ):
+
+    '''
+    Calculates and saves Number Density.
+
+    Parameters
+    ----------
+    config : dict
+        set of workflow configuration parameters
+
+    '''
+
+    print
+    print 'Save Number Density'
+    print '#########################'
    
+
+    # get options
+    resolve_config( config )
+    collection_file = '{collection_dir}/{collection_file}'.format( **config )
+    number_density_file = '{number_density_dir}/{number_density_file}'.format( **config )
+
+    save_numberdensity.main( collection_file, output_file = number_density_file)
+
+    print
+
+    return
+
+ 
+######################################################################
+######################################################################
+
+  
 
 if __name__ == '__main__':
 
@@ -178,10 +286,24 @@ if __name__ == '__main__':
 
 
     # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (2) Add Variables to Cluster File
+    # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    if not sett['no_addvars']:
+        add_vars2cluster( workflow_config )
+
+
+    # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
     # (3) Cluster Collections
     # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
     if not sett['no_collection']:
         make_cluster_collection( workflow_config )
+
+
+    # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (4) Save Number Density
+    # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    if not sett['no_number_density']:
+        make_number_density( workflow_config )
 
 
 ######################################################################
