@@ -55,6 +55,7 @@ def main(flist,
 
     # variables list -------------------------------------------------
     vlist =  add_aux_varlist + [
+        'area',
         'diameter', 
         'x_mean', 
         'y_mean', 
@@ -116,7 +117,11 @@ def main(flist,
     R = 0.5 * d['diameter']
     d['weighted_nN_distance'] = dist[:, 0] / R
     d['weighted_2nd_Neighbor_distance'] = dist[:, 1] / R
-    
+ 
+    if 'imf_mean' in d.keys():
+        d['mass_lift'] = d['imf_mean'] * d['area'] * 1e6 
+
+   
 
     out = d
     # ================================================================
