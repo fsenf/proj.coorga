@@ -19,6 +19,7 @@ import cluster_analysis
 def main(fname, 
          expname = 'basic', 
          varname = 'bt108',
+         input_options = {},
          do_output = True,
          output_dir = None):
 
@@ -63,7 +64,7 @@ def main(fname,
 
 
     # data input -----------------------------------------------------
-    din = data_reader.input(fname, varname)
+    din = data_reader.input(fname, varname, **input_options)
 
     USE_EXISTING_CLUSTER_DATA = 'clustname' in din.keys()
     # ================================================================

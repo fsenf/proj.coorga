@@ -119,15 +119,24 @@ def make_cluster_analysis( config ):
     print 'Run Cluster Analysis'
     print '####################'
     
+
     # prepare options
+    # ================
     sett = dict(do_output = True)   
     for key in ['varname', 'expname', 'output_dir']:
         sett[key] = config[key].format(**config)
+
+    sett['input_options'] = config['input_options']
+
     
     # get filelist
+    # ============
     fnames = '{input_dir}/{input_files}'.format( **config ) 
     filelist = glob.glob( fnames.format( **config ) )
 
+
+    # loop over all files
+    # ====================
     for fname in filelist:
 
         save_cluster_properties.main( fname, **sett)
@@ -309,20 +318,20 @@ def add_pair_correlations( config ):
 ######################################################################
 ######################################################################
 
-  
+def main( sett, workflow_config ):
 
-if __name__ == '__main__':
+    '''
+    Full coorga analysis workflow.
 
- 
-    # option handling ----------------------------------------------------
-    sett = option_handling( default_settings() )
-    # ================================================================
 
-    
-    # read configuration ---------------------------------------------
-    workflow_config = json2dict( sett['filename'] )
-    # ================================================================
+    Parameters
+    ----------
+    sett : dict
+        option handling
 
+    workflow_config : dict
+        user configuration
+    '''
 
     # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
     # (1) Cluster Analysis per File
@@ -357,7 +366,29 @@ if __name__ == '__main__':
     if not sett['no_pair_correlations']:
         add_pair_correlations( workflow_config )
 
+    return
 
+
+######################################################################
+######################################################################
+
+
+if __name__ == '__main__':
+
+ 
+    # option handling ----------------------------------------------------
+    sett = option_handling( default_settings() )
+    # ================================================================
+
+    
+    # read configuration ---------------------------------------------
+    workflow_config = json2dict( sett['filename'] )
+    # ================================================================
+
+
+    # run workflow ---------------------------------------------------
+    main( sett, workflow_config )
+    # ===============================================================
 
 ######################################################################
 ######################################################################
