@@ -58,5 +58,17 @@ def special_threshold_calculations(lon, lat, f, method = None):
         csf = stats.cumsum_data_fraction(fp)
         
         thresh = fp[csf < 50.].min()
+ 
+    elif method ==  'full_domain_relative50_for_mass_flux':
+        
+        # no region masking
+        #fm = atlantic_masking(lon, lat, f, mask_value = 0.)
+        fm = f
+
+        # calculate cummulative data sum
+        fp = np.where(fm > 0., fm, 0.)
+        csf = stats.cumsum_data_fraction(fp)
+        
+        thresh = fp[csf < 50.].min()
         
     return thresh

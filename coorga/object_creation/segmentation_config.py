@@ -96,6 +96,14 @@ def predefined_setups(name):
         b.update(dict( name = name ))
         return b
 
+    elif name == 'exp012':
+        b = predefined_setups('basic')
+        b.update( dict( thresh = 'full_domain_relative50_for_mass_flux' ) )
+        b.update( dict( min_size = 36 ) )
+        b.update(dict( name = name ))
+        return b
+
+
     elif name == 'exp022':
         b = predefined_setups('exp011')
         b.update( dict( min_size = 4 ) )

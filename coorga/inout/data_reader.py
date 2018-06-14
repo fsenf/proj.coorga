@@ -13,7 +13,7 @@ from tropy.standard_config import *
 ######################################################################
 ######################################################################
 
-def input(fname, varname):
+def input(fname, varname, **input_options):
     
     '''
     Input Interface as data reader wrapper.
@@ -75,7 +75,7 @@ def input(fname, varname):
 
     else:
         if 'narval' in fname:
-            dset = read_narval_addvars(fname, varname)
+            dset = read_narval_addvars(fname, varname, **input_options)
     # ================================================================
             
 
@@ -321,7 +321,9 @@ def generic_addvar_reader(fname, vname):
 
 
 
-def read_narval_addvars(fname, vname):
+def read_narval_addvars(fname, vname, 
+                            domain_center = None,
+                            region_slice = None):
 
     '''
     Reads the time stack of Narval data, either meteoat or synsat.
@@ -335,6 +337,14 @@ def read_narval_addvars(fname, vname):
     vname : str
         variable name 
         (variable should be contained in file)
+
+    domain_center : tuple of floats, optional, default = None
+        setting the projection center to (clon, clat)
+        if None: not used
+
+    region_slice : tuple of floats, optional, default = None
+        cutout of fields for form  ((irow1, irow2), (icol1, icol2))
+        if None: not used
 
 
     Returns
@@ -387,7 +397,13 @@ def read_narval_addvars(fname, vname):
     geo = hio.read_dict_from_hdf(gfile)
     lon, lat = geo['lon'], geo['lat']
 
-    x,y = gi.ll2xyc(lon, lat)
+    if domain_center is not None:
+        mlon, mlat = domain_center
+    else:
+        mlon, mlat = None, None
+
+    x,y = gi.ll2xyc(lon, lat, mlon = mlon, mlat = mlat)
+
     area = np.abs( gi.simple_pixel_area(lon, lat) )
     # ================================================================
 
@@ -405,6 +421,15 @@ def read_narval_addvars(fname, vname):
     dset['input_dir'] = os.path.dirname(fname)
     # ================================================================
 
+
+    # do cutout if wanted --------------------------------------------
+    field_names =  [ 'x', 'y', 'lon', 'lat', 'lsm', 'area' , vname ]
+
+    if region_slice is not None:
+        for name in field_names:
+            dset[name] = gi.cutout_fields( dset[name], region_slice, 
+                                           vaxis = 0)
+    # ================================================================
 
     return dset
 

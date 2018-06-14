@@ -456,9 +456,9 @@ def cluster_analysis(din, varname,
         # get local time field
         f = field[itime]
 
-        if thresh == 'relative50_for_mass_flux':
+        if type(thresh) == type(''):
             thresh = special_threshold_calculations(din['lon'], din['lat'], f, 
-                                                    method = 'relative50_for_mass_flux')
+                                                    method = thresh)
 
         # set masks
         f.data[f.mask] = thresh / 2.
