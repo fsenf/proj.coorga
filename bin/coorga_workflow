@@ -9,8 +9,7 @@ import coorga.object_creation.save_collection as save_collection
 import coorga.object_creation.add_variable2clustdat as add_variable2clustdat
 import coorga.object_creation.save_numberdensity as save_numberdensity
 import coorga.object_creation.save_pair_calculations as save_pair_calculations
-
-
+import coorga.object_creation.save_bootstrap_cluster as save_bootstrap_cluster
 
 ######################################################################
 ######################################################################
@@ -65,6 +64,11 @@ def option_handling(default):
                         default = False,
                         action = 'store_true',
                         help="Switch pair correlation calculation off")
+
+    parser.add_argument("--bootstrapping",
+                        default = False,
+                        action = 'store_true',
+                        help="Switch bootstrapping on")
 
 
 
@@ -167,7 +171,6 @@ def add_vars2cluster( config ):
     print '####################'
     
     # get options
-    resolve_config( config )
     expname = config['expname']
     odir = config['output_dir']
     addvar_list = config['addvar_list']
@@ -219,7 +222,6 @@ def make_cluster_collection(config):
    
 
     # get options
-    resolve_config( config )
     expname = config['expname']
     collection_file = '{collection_dir}/{collection_file}'.format( **config )
     odir = config['output_dir']
@@ -266,11 +268,21 @@ def make_number_density( config ):
    
 
     # get options
-    resolve_config( config )
     collection_file = '{collection_dir}/{collection_file}'.format( **config )
     number_density_file = '{number_density_dir}/{number_density_file}'.format( **config )
 
-    save_numberdensity.main( collection_file, output_file = number_density_file)
+     # also prepare interpolation options
+    fnames = '{input_dir}/{input_files}'.format( **config ) 
+    filelist = glob.glob( fnames.format( **config ) )
+
+    iopt = dict( do_interpolation = True,
+                 variable_filename = filelist[0],
+                 variable_name = config['varname'],
+                 input_options = config['input_options'])
+
+    save_numberdensity.main( collection_file, 
+                             output_file = number_density_file,
+                             **iopt )
 
     print
 
@@ -300,7 +312,6 @@ def add_pair_correlations( config ):
    
 
     # get options
-    resolve_config( config )
     collection_file = '{collection_dir}/{collection_file}'.format( **config )
     number_density_file = '{number_density_dir}/{number_density_file}'.format( **config )
 
@@ -317,6 +328,75 @@ def add_pair_correlations( config ):
  
 ######################################################################
 ######################################################################
+
+
+def make_cluster_bootstrap( config ):
+
+    '''
+    Performs Cluster Bootstrap Analysis.
+
+
+    Parameters
+    ----------
+    config : dict
+        set of workflow configuration parameters
+
+
+    Notes
+    -----
+    We work with already generate clusterdata - therefore input
+    is read from output_dir.
+
+    For bootstrap data, we use an additional directory - therefore
+    output is written into boot_dir.
+    '''
+
+    print
+    print 'Run Bootstrap Analysis'
+    print '######################'
+    
+
+    # prepare options
+    # ================
+    sett = dict(do_output = True)   
+    sett['output_dir'] = config['boot_dir']
+    sett['bootstrap_options'] = config['bootstrap_options']
+
+
+    # number dens file
+    # ================
+    number_density_file = '{number_density_dir}/{number_density_file}'.format( **config )
+
+    # cluster directory
+    # ==================
+    cluster_dir = config['output_dir']
+    expname = config['expname']
+
+    
+    # get filelist
+    # ============
+    fnames = '{input_dir}/{input_files}'.format( **config ) 
+    filelist = glob.glob( fnames.format( **config ) )
+
+    # loop over all files
+    # ====================
+    cluster_list = []
+
+    for fname in filelist:
+
+        basename = os.path.splitext(os.path.basename(fname))[0]
+        clustname = '%s/clust_prop_%s_%s.h5' % (cluster_dir, basename, expname)
+
+        save_bootstrap_cluster.main( clustname, number_density_file, **sett)
+
+    print
+
+    return
+
+
+######################################################################
+######################################################################
+
 
 def main( sett, workflow_config ):
 
@@ -373,6 +453,53 @@ def main( sett, workflow_config ):
 ######################################################################
 
 
+def boot_main( sett, workflow_config ):
+
+    '''
+    Full coorga bootstrap analysis workflow.
+
+
+    Parameters
+    ----------
+    sett : dict
+        option handling
+
+    workflow_config : dict
+        user configuration
+    '''
+
+    # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (1) Cluster Bootstrap Analysis per File
+    # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    make_cluster_bootstrap( workflow_config )
+
+
+    # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    # (2) the Other Main Analysis with modified Config
+    # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    
+    # copy and modify processing settings
+    boot_sett = sett.copy()
+    
+    boot_sett['no_clustering'] = True
+    boot_sett['no_number_density'] = True
+
+    # copy and modify workflow config
+    boot_config = workflow_config.copy()
+
+    boot_config['collection_dir'] = boot_config['boot_dir'] 
+    boot_config['output_dir'] = boot_config['boot_dir'] 
+
+    # run remaing analysis
+    main( boot_sett, boot_config )
+
+    return
+
+
+######################################################################
+######################################################################
+
+
 if __name__ == '__main__':
 
  
@@ -383,12 +510,19 @@ if __name__ == '__main__':
     
     # read configuration ---------------------------------------------
     workflow_config = json2dict( sett['filename'] )
+    resolve_config( workflow_config )
     # ================================================================
 
 
     # run workflow ---------------------------------------------------
     main( sett, workflow_config )
+
+    if sett['bootstrapping']:
+
+        boot_main( sett, workflow_config )
     # ===============================================================
+
+
 
 ######################################################################
 ######################################################################

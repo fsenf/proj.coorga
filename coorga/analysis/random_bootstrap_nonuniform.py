@@ -8,10 +8,12 @@
 import numpy as np
 import scipy.ndimage
 
-import analysis_tools.grid_and_interpolation as gi
-import analysis_tools.segmentation as seg
-import analysis_tools.statistics as stats
+import tropy.analysis_tools.grid_and_interpolation as gi
+import tropy.analysis_tools.segmentation as seg
+import tropy.analysis_tools.statistics as stats
 
+import coorga.object_creation.cluster_analysis as cluster_analysis
+from coorga.analysis.get_variable4cellids import get_variable4cellids
 
 ##############################################################################
 ##############################################################################
@@ -19,8 +21,9 @@ import analysis_tools.statistics as stats
 
 def random_field_generator_nonuniform_dist(c,  nd0, 
                                                nfixed = None,
+                                               output_cell_mapping = False,
                                                use_poisson = False, 
-                                               nedge = 10, 
+                                               Niter_max = 100,
                                                dmin = 1.5):
 
     '''
@@ -44,25 +47,38 @@ def random_field_generator_nonuniform_dist(c,  nd0,
        if True, the number of cells is drawn from Poisson distribution, 
        with repeated use of same cells possible
 
-    nedge : int, optional, default = 10
-       size of edge (in px) where no cells are allowed
-    
+    Niter_max : int, optional, default = 100
+        number of iterations to try to place a new cell
+
     dmin : float, optional, default = 1.5
        minimum distance between two cells randomly place in the domain
 
+    output_cell_mapping : bool, optional, default = False
+        switch if mapping between new and original cell index is provided 
     
+
     Returns
     --------
+    cell_mapping : dict, optional, if output_cell_mapping = True
+        gives the mapping between new and original cell index,
+        e.g cell_mapping[ new_index ] = original_index
+    
     cran : numpy array
         randomly rearanged cluster field
+
+
     '''
     
 
 
     # first sort cluster and remove possibly missing ones ------------
-    cs = seg.sort_clusters(c)
+    
+    # sorting destroys order --> bad
+    cs = c # seg.sort_clusters(c)
+    existing_cell_indices = np.array( list(set(cs.flatten()) - {0}) )
 
-    cmax = cs.max()
+    nexisting = len( existing_cell_indices )
+
     nrows, ncols = cs.shape
     # ================================================================
 
@@ -75,13 +91,17 @@ def random_field_generator_nonuniform_dist(c,  nd0,
     # set up the new cluster index list ------------------------------
     if not nfixed == None:
         ncell = nfixed
-        cindex_list = np.random.randint(1, cmax + 1, size = ncell)
+        irand = np.random.randint(nexisting, size = ncell)
+        cindex_list = existing_cell_indices[irand]
+    
     elif use_poisson:
-        ncell = np.random.poisson(cmax)
-        cindex_list = np.random.randint(1, cmax + 1, size = ncell)
+        ncell = np.random.poisson(nexisting)
+        irand = np.random.randint(nexisting, size = ncell)
+        cindex_list = existing_cell_indices[irand]
+ 
     else:
-        ncell = cmax
-        cindex_list = range(1, cmax + 1)
+        ncell = nexisting
+        cindex_list = existing_cell_indices
     # ================================================================
 
 
@@ -90,7 +110,7 @@ def random_field_generator_nonuniform_dist(c,  nd0,
     icols = np.arange(0, ncols + 1) - 0.5
     bins = (irows, icols)
     
-    fac = 100  # hope that 20 times the cell number is okay ...
+    fac = Niter_max  # hope that 100 times the cell number is okay ...
     random_position = stats.draw_from_empirical_dist(bins, nd0, 
                                                      Nsamp = fac * ncell,
                                                      discrete_version = True)
@@ -103,12 +123,20 @@ def random_field_generator_nonuniform_dist(c,  nd0,
     
     # place cells into the new field ---------------------------------
     ncounter = 0
-    for icell, cind in enumerate(cindex_list):
+    icell = 1
+    cell_mapping = {}
 
+    for cind in cindex_list:
 
         # (i) cutout cell ............................................
         ndist = np.round( dmin + 2 ).astype( np.int )
-        ccut = gi.cutout_cluster(cs, cind, nedge = ndist)
+        try:
+            ccut = gi.cutout_cluster(cs, cind, nedge = ndist)
+        except:
+            # cutout fails if cell number is empty
+            print 'Warning: break at cell cutout used!'
+            break
+
         mcut = (ccut == cind)
 
         # outer distance
@@ -129,7 +157,6 @@ def random_field_generator_nonuniform_dist(c,  nd0,
         
         # START ITERATION
         Niter = 0
-        Niter_max = fac
         CELL_HAS_OVERLAP = True
 
         while CELL_HAS_OVERLAP:
@@ -168,12 +195,149 @@ def random_field_generator_nonuniform_dist(c,  nd0,
 
         # (iv) place cell into the new field
         # cran[ir1:ir2, ic1:ic2] = np.where( mcut, ccut, cran_cut)
-        cran[ir1:ir2, ic1:ic2] = np.where( mcut, icell + 1, cran_cut)  #set increasing index of random cell placement
+        cran[ir1:ir2, ic1:ic2] = np.where( mcut, icell, cran_cut)  #set increasing index of random cell placement
+
+        cell_mapping[icell] = cind
+
+        icell += 1
     # ================================================================
 
-    cran = seg.sort_clusters(cran)
+    # sorting
+    csort = seg.sort_clusters(cran)
 
-    return cran
+    # after sorting also the index map has to be adjusted
+    index_sorted = range(1, csort.max() + 1)   # new index
+
+    index_unsorted = scipy.ndimage.measurements.mean(cran, 
+                                labels = csort, 
+                                index = index_sorted).astype(np.int)
+
+    revised_mapping = []
+    for i, i_sort in enumerate( index_sorted ):
+        i_unsorted = index_unsorted[i]
+        revised_mapping.append( cell_mapping[i_unsorted] )
+
+    if output_cell_mapping:
+        return revised_mapping, csort
+    else:
+        return csort
 
 ######################################################################
 ######################################################################
+
+
+def calculate_bootstrap4clust(cx, cy, segmented, cset, nd_ref,
+                                               nfixed = None,
+                                               use_poisson = False,
+                                               dmin = 1.5,
+                                               addvarnames = []):
+
+    '''
+    Calculates a randomization of cluster field c based on a background
+    number density field.
+
+
+    Parameters
+    ----------
+    cx : numpy array, 2dim
+        x-coordinate of cluster field c
+
+    cy : numpy array, 2dim
+        y-coordinate of cluster field c
+
+    segmented : numpy array, 3dim, (ntimes, nrows, ncols)
+        cluster field
+
+    cset : dict
+        set of cell properties
+
+    nd_ref : numpy array, 2dim, shape = (nrows, ncols)
+        reference number density same grid as cluster field
+
+    nfixed : int, optional, default = None
+        if set, nfixed specifies a constant number of cells used in bootstrapping
+
+    use_poisson : bool, optional, default = False
+       if True, the number of cells is drawn from Poisson distribution, 
+       with repeated use of same cells possible
+
+    dmin : float, optional, default = 1.5
+       minimum distance between two cells randomly place in the domain
+
+    addvarnames : list, optional, default = ['imf_mean']
+        list of additional variables add to the bootstrap set
+
+
+    Returns:
+    --------
+    cset_ran : dict
+        cell data for randomized field
+
+    segmented_ran : numpy, 3dim, (ntimes, nrows, ncols)
+        randomized cluster field
+
+    '''
+    
+    # prepare aux fields
+    carea = gi.simple_pixel_area( cx, cy, xy = True )
+
+    
+    # initialize random field
+    ntimes, nrows, ncols = segmented.shape
+    segmented_ran = np.zeros_like( segmented )
+    
+    cset_ran = {}
+
+    for addvar in addvarnames:
+        cset_ran[addvar] = []
+    noffset = 0
+
+    # random shifting within time loop
+    for n in range( ntimes ):
+    
+        c = segmented[n]
+ 
+        # random bootstrap 
+        if True: #try:
+           cell_mapping, cran = random_field_generator_nonuniform_dist(c, 
+                                        nd_ref,
+                                        use_poisson = use_poisson,
+                                        nfixed = nfixed, 
+                                        dmin = dmin,
+                                        output_cell_mapping = True)
+
+        else: #except:
+            cran = np.zeros_like( c )
+
+        segmented_ran[n] = cran[:, :]
+
+        # cluster analysis for bootstrap set ---------------------
+        dset = {'clust': cran, 'x': cx, 'y': cy, 'area':carea}
+
+        dset['rel_time'] = get_variable4cellids(cset, 'rel_time', n, [1])[0]
+        dset['abs_time'] = get_variable4cellids(cset, 'abs_time', n, [1])[0]
+        dset['index_time'] = n
+
+        # get cluster properties
+        cluster_analysis.cellset_analysis(dset, cset_ran, 
+                                          noffset = noffset, 
+                                          var_names = [],
+                                          weight_names = [],
+                                          do_landsea_fraction = False)
+
+        for addvar in addvarnames:
+            cset_ran[addvar] += [ get_variable4cellids(cset, 
+                                                addvar, 
+                                                n, 
+                                                cell_mapping) ]
+
+        noffset += cran.max()
+    
+    for addvar in addvarnames:
+        cset_ran[addvar] = np.hstack( cset_ran[addvar] )
+
+    return cset_ran, segmented_ran
+
+######################################################################
+######################################################################
+

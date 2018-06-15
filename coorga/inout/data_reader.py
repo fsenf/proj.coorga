@@ -404,7 +404,7 @@ def read_narval_addvars(fname, vname,
 
     x,y = gi.ll2xyc(lon, lat, mlon = mlon, mlat = mlat)
 
-    area = np.abs( gi.simple_pixel_area(lon, lat) )
+    area = np.abs( gi.simple_pixel_area(x, y, xy = True) )
     # ================================================================
 
 

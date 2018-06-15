@@ -112,7 +112,7 @@ def calculate_pcount4clust( c, vname, variable_set,
 
         c[pcount_name][m] = pcount.transpose(1, 0, 2)
     
-    c['%s_bins' % pcount_name] = rbins
+    c['%s_rbins' % pcount_name] = rbins
     c['%s_variable_set' % pcount_name] = variable_set
     c['%s_variable_name' % pcount_name] = vname
     c['%s_ids' % pcount_name] = full_ids
