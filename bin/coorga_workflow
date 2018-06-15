@@ -103,6 +103,42 @@ def resolve_config(config, N = 10):
     
     return
 
+
+######################################################################
+######################################################################
+
+
+def read_and_copy_config( config_file ):
+
+    '''
+    Reads and copies config file into output directory.
+
+    Parameters
+    ----------
+    config_file : str
+        name of config file
+
+
+    Returns
+    -------
+    workflow_config : dict
+        set of configuration parameters and options
+    '''
+
+    
+    # read configuration ---------------------------------------------
+    workflow_config = json2dict( config_file )
+    resolve_config( workflow_config )
+    # ================================================================
+
+
+    # copy config ----------------------------------------------------
+    os.system('cp {config_file} {output_dir}'.format( config_file = config_file,
+                                                      **workflow_config ) )
+    # ================================================================
+
+    return workflow_config
+
 ######################################################################
 ######################################################################
 
@@ -509,8 +545,7 @@ if __name__ == '__main__':
 
     
     # read configuration ---------------------------------------------
-    workflow_config = json2dict( sett['filename'] )
-    resolve_config( workflow_config )
+    workflow_config = read_and_copy_config( sett['filename'] )
     # ================================================================
 
 
