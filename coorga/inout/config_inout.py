@@ -129,6 +129,71 @@ def dict2json( fname, d ):
 
 
 
+def resolve_config(config, N = 10):
+
+    '''
+    Trys to resolve config strings.
+
+    Parameters
+    ----------
+    config : dict
+        configuration dictionary
+
+
+    N : int, optional default = 10
+        number of iterations (fixed)
+    '''
+    for i in range(N):
+        for k in config.keys():
+
+            s = config[k]
+            try:
+                config[k] = s.format( **config )
+            except:
+                pass # no string argument
+    
+    return
+
+
+######################################################################
+######################################################################
+
+
+def read_and_copy_config( config_file ):
+
+    '''
+    Reads and copies config file into output directory.
+
+    Parameters
+    ----------
+    config_file : str
+        name of config file
+
+
+    Returns
+    -------
+    workflow_config : dict
+        set of configuration parameters and options
+    '''
+
+    
+    # read configuration ---------------------------------------------
+    workflow_config = json2dict( config_file )
+    resolve_config( workflow_config )
+    # ================================================================
+
+
+    # copy config ----------------------------------------------------
+    os.system('cp {config_file} {output_dir}'.format( config_file = config_file,
+                                                      **workflow_config ) )
+    # ================================================================
+
+    return workflow_config
+
+######################################################################
+######################################################################
+
+
 
 if __name__ == '__main__':
 
