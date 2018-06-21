@@ -11,6 +11,7 @@ def binwise_average(d,
                     selector_name, 
                     selector_bins, 
                     operator = np.ma.mean,
+                    minimum_data_fraction = 0.1,
                     output_tseries = False):
     
     '''
@@ -34,6 +35,10 @@ def binwise_average(d,
 
     operator : func, optional, default = np.ma.mean
         function applied for statistics (e.g. averaging)
+
+    minimum_data_fraction : float, optional, default = 0.1
+        minimum fraction of data to perform time averaging
+        if less data are available value are set to NaN
 
     output_tseries : bool, optional, default = False
         switch if ave and sem, OR, full time series is returned
@@ -76,11 +81,11 @@ def binwise_average(d,
     for itime, t in enumerate( tlist ):
         
         # time mask
-        m = d['time_id'] == t
+        tmask = d['time_id'] == t
         
-        vm = v[m]
-        sm = s[m]
-
+        vm = v[ tmask ]
+        sm = s[ tmask ]
+        
         for i in range(nbins - 1):
                 
             # set bin edges 
@@ -89,14 +94,30 @@ def binwise_average(d,
     
             # prepare mask
             m = (sm >= s1) & (sm < s2)
-
-            # do the averaging
-            stats[itime, i] = operator( vm[m] )
             
+            # do the averaging
+            if sum(m) == 0:
+                stats[itime, i] = np.nan
+            else:
+                stats[itime, i] = operator( vm[m] )
+            
+    stats = np.ma.masked_invalid( stats )
 
     ave = stats.mean( axis = 0 )
     std = stats.std( axis = 0 )
-    sem = 2 * std / np.sqrt( ntime )
+
+    ncount =  stats.count(axis = 0)
+    sem = np.ma.divide( 2 * std, np.sqrt( ncount ) )
+
+
+    # check data fraction
+    data_fraction = ncount / np.float( ntime )
+    mask_fraction = data_fraction < minimum_data_fraction
+    
+
+    ave = np.ma.masked_where( mask_fraction, ave )
+    sem = np.ma.masked_where( mask_fraction, sem )
+
 
     if output_tseries: 
         return stats
