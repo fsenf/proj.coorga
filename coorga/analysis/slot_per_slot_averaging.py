@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from get_cluster_id import get_cluster_id
+
 ######################################################################
 ######################################################################
 
@@ -72,3 +74,55 @@ def slot_per_slot_averaging(f, d, mask = True, identifier_name = 'time_id'):
     fave = np.ma.masked_invalid( np.array(gts) )
     
     return fave
+
+######################################################################
+######################################################################
+
+
+def time_ave_ncounts(dset, pcount_name):
+
+    '''
+    Calculates time-average pcounts.
+
+    
+    Parameters
+    ----------
+    dset : dict
+        set of cell properties
+
+    pcount_name : str
+        name of the pcount variable
+
+    '''
+    
+
+    # set time vector
+    time_id = dset['time_id']
+    time_set = sorted( set(time_id) )
+    
+    ntimes = len( time_set )
+
+    
+    # extract field
+    rbins = dset['%s_rbins' % pcount_name]
+    var_set = dset['%s_variable_set' % pcount_name]
+    var_name = dset['%s_variable_name' % pcount_name]
+    ids = dset['%s_ids' % pcount_name]
+    pcount =  dset[pcount_name]
+
+    
+    # initialize field
+    ncells, ncomponent, nrbins = pcount.shape
+    Cr = np.zeros((ntimes, ncomponent, ncomponent, nrbins))
+
+
+    for i, tid in enumerate( time_set ):
+        mtime = (time_id == tid)
+    
+        for n in range(ncomponent):
+            m = (ids == n) & mtime
+            
+            if m.sum() != 0:
+                Cr[i, n] = pcount[m].sum(axis = 0)   
+
+    return rbins, Cr
