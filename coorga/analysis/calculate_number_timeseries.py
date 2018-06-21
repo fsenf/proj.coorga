@@ -14,56 +14,127 @@ import numpy as np
 ######################################################################
 ######################################################################
 
-def trans_coords2equator(x, y):
+def get_number_tseries(d):
 
-    clon, clat = gi.xy2ll(1.*x, 1.*y)
-
-    return gi.ll2xy(clon, clat, lon0 = 0, lat0 = 0)
-
-######################################################################
-######################################################################
-
-def get_number_timeseries(clustfile, vname = 'smf'):
-
-    dset = hio.read_dict_from_hdf(clustfile)
-    d = dset[vname]
-
-    xs, ys, tid, trel = d['x_mean'], d['y_mean'], d['time_id'], d['rel_time']
-    clon, clat = gi.xy2ll(xs, ys)
-
-    # determine typical land-sea-type
-    lsm = (d['fraction_of_lsm_types'] * np.arange(5)).sum(axis = 1)
-
-
-    # transform coordinates
-    x, y = trans_coords2equator(xs,ys)
+    '''
+    Calculates number time series.
 
     
-    # prepare cutout
-    xrange = -5500., -2000.
-    yrange = 0., 2000.
+    Parameters
+    ----------
+    d : dict
+        set of cell properties
 
-
-    rmask = (x > xrange[0]) & (x < xrange[1])& (y > yrange[0]) & (y < yrange[1])
-
-
-    # loop over time
-    time_ids = sorted( set(d['time_id']) )
-
-    nvec = []
+    
+    Returns
+    --------
+    N : numpy array, 1d
+        number time series
+    
+    '''
+    
+    N = []
+    tname = 'time_id'
+    time_ids = sorted( set(d[tname]) )
+    
     for tid in time_ids:
+        m = d[tname] == tid
+        N.append ( m.sum() )
+        # N.append ( m[m].shape[0] )
+        
+    N = np.array(N)
 
-        # masking 
-        tmask = (d['time_id'] == tid)
-    
-        ncount = (rmask & tmask).sum()
+    return N
 
-        nvec.append( ncount )
+######################################################################
+######################################################################
+
+def get_number_per_component_tseries(d, pcount_name = 'pcount_diameter'):
+
+    '''
+    Calculates number time series per component. IDs are needed.
+
     
-    nvec = np.ma.masked_invalid( np.array( nvec ) )
+    Parameters
+    ----------
+    d : dict
+        set of cell properties
+
     
-    return nvec
+    Returns
+    --------
+    Nsum : numpy array, 2d per component, shape = (ntimes, ncomponent)
+        number time series
     
+    '''
+    
+    N = []
+    tname = 'time_id'
+    time_ids = sorted( set(d[tname]) )
+    ntimes = len( time_ids )
+
+    # get label field
+    ids = d['%s_ids' % pcount_name]
+    
+
+    # initialize field
+    ncells, ncomponent, nrbins = d[pcount_name].shape
+    Nsum = np.zeros((ntimes, ncomponent))
+    
+    
+    for i, tid in enumerate( time_ids ):
+        mtime = (d[tname] == tid)
+    
+        for n in range(ncomponent):
+            m = (ids == n) & mtime
+            
+            Nsum[i,n] = m.sum()
+        
+    Nsum = np.array(Nsum)
+
+    return Nsum
+
+
+######################################################################
+######################################################################
+
+def get_pairnumber_per_component_tseries(d):
+       
+    '''
+    Calculates time series of pair number per component. IDs are needed.
+
+    
+    Parameters
+    ----------
+    d : dict
+        set of cell properties
+
+    
+    Returns
+    --------
+    Npair : numpy array, 2d per component, shape = (ntimes, ncomponent)
+        pair number time series
+    
+    '''
+
+
+    Nc = get_number_per_component_tseries(d)
+
+    ntimes, ncomponent = Nc.shape
+    
+    Npair = np.zeros( (ntimes, ncomponent, ncomponent) )
+    
+    for n1 in range(ncomponent):
+        for n2 in range(ncomponent):
+            
+            if n1 == n2:
+                fac = -1
+            else:
+                fac = 0
+            
+            Npair[:, n1, n2] = Nc[:, n1] * (Nc[:, n2] + fac) 
+            
+    return Npair
 
 ######################################################################
 ######################################################################
