@@ -14,7 +14,7 @@ import tropy.analysis_tools.grid_and_interpolation as gi
 
 def calculate_average_numberdensity(d,
                                     smooth_sig = 2.,
-                                    filter_in_logspace = True,
+                                    filter_in_logspace = False,
                                     var_names = None,
                                     bins = None,
                                     itime_range = None,
@@ -115,6 +115,14 @@ def calculate_average_numberdensity(d,
     # ================================================================
 
 
+    # check for region -----------------------------------------------
+    reg_xmask = ( x > xbins.min() ) & (x < xbins.max() )
+    reg_ymask = ( y > ybins.min() ) & (y < ybins.max() )
+    reg_mask = reg_xmask & reg_ymask
+    mask = mask & reg_mask     
+    # ================================================================
+
+
     # histogram analysis ---------------------------------------------
     h, xe, ye = np.histogram2d(x[mask], y[mask], bins)
 
@@ -142,8 +150,9 @@ def calculate_average_numberdensity(d,
     
     # get the number of cells per time slot --------------------------
     target_times = sorted( set(tid[mask]) )
-    ntimes = len(target_times)
-    ncells =  h.sum() 
+    ntimes = 1.* len(target_times)
+
+    ncells =  1. * len (tid[mask] )
     ncells_per_slot = ncells /  ntimes
     # ================================================================
 
