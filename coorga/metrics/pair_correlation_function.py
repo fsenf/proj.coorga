@@ -21,6 +21,7 @@ def pairCorrelationFunction_2D(pos, egrid, numberDensity, rMax, dr,
                                equal_area = True, 
                                weight = None,
                                constant_analytic = False,
+                               mask_edge_particle = True,
                                use_radial_interpolation = False,
                                finite_size_correction = False):
 
@@ -66,6 +67,9 @@ def pairCorrelationFunction_2D(pos, egrid, numberDensity, rMax, dr,
 
     constant_analytic : bool, optional default = False
         use analytic form of expected reference number assuming a constant number density
+ 
+    mask_edge_particles : bool, optional default = True
+        If particle close to edge are ignored
  
     use_radial_interpolation : bool, optional,  default = False
         if number field is represented by an interpolating function and intergation is performed
@@ -122,9 +126,13 @@ def pairCorrelationFunction_2D(pos, egrid, numberDensity, rMax, dr,
     
     xmin, xmax = xg.min(), xg.max()
     ymin, ymax = yg.min(), yg.max()
-        
-    xmask = (x > rMax + xmin) & (x < xmax - rMax)
-    ymask = (y > rMax + ymin) & (y < ymax - rMax)
+    
+    if mask_edge_particle:
+        xmask = (x > rMax + xmin) & (x < xmax - rMax)
+        ymask = (y > rMax + ymin) & (y < ymax - rMax)
+    else:
+        xmask = (x > xmin) & (x < xmax)
+        ymask = (y > ymin) & (y < ymax)
     
     interior_indices, = np.where( xmask & ymask )
     num_interior_particles = len(interior_indices)
