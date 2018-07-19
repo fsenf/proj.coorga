@@ -290,7 +290,9 @@ def add_pair_correlations( config ):
     save_pair_calculations.main( collection_file, 
                                  number_density_file,
                                  pcount_variables = pcount_variables,
-                                 no_pcf = True)
+#                                 no_pcf = True)
+                                 no_pcf = False)
+
 
     print
 
@@ -442,7 +444,8 @@ def boot_main( sett, workflow_config ):
     # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
     # (1) Cluster Bootstrap Analysis per File
     # TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-    make_cluster_bootstrap( workflow_config )
+    if not sett['no_clustering']:
+        make_cluster_bootstrap( workflow_config )
 
 
     # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -485,10 +488,9 @@ if __name__ == '__main__':
 
 
     # run workflow ---------------------------------------------------
-    main( sett, workflow_config )
-
-    if sett['bootstrapping']:
-
+    if not sett['bootstrapping']:
+        main( sett, workflow_config )
+    else:
         boot_main( sett, workflow_config )
     # ===============================================================
 
