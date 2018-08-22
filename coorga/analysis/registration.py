@@ -330,6 +330,7 @@ def cutout_registered_box(f, ind0, bsize,
 #            break
         
         # and cutout
+        ind = ind.astype(np.int)
         ftube = gi.tube_cutout4box(f, ind, bsize)
 
 
