@@ -66,7 +66,7 @@ def calculate_pcf4clust( c, egrid, nd_ref,
     dx = gi.lmean(np.diff(egrid[0], axis = 0), axis = 1)
     dy = gi.lmean(np.diff(egrid[1], axis = 1), axis = 0)
 
-    ncells_per_slot = (dx * dy * nd).sum()
+    ncells_per_slot = (dx * dy * nd_ref).sum()
     nd_normed = nd_ref / ncells_per_slot
     # ================================================================
 
@@ -95,6 +95,10 @@ def calculate_pcf4clust( c, egrid, nd_ref,
    
     c['pcf'] = np.nan * np.ma.ones( (ncells, nbins - 1) )
     
+    if pcf_sensitivity:
+        for pcf_name in ['pcf_hom', 'pcf_hom_tconst', 'pcf_tconst']:
+            c[pcf_name] = np.nan * np.ma.ones( (ncells, nbins - 1) )
+            
 
     for tid in time_ids:
 
