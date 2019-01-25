@@ -183,6 +183,13 @@ def read_and_copy_config( config_file ):
     # ================================================================
 
 
+    # make output dir ------------------------------------------------
+    output_dir = workflow_config['output_dir']
+    if not os.path.isdir( output_dir ):
+        os.makedirs( output_dir )
+    # ================================================================
+
+
     # copy config ----------------------------------------------------
     os.system('cp {config_file} {output_dir}'.format( config_file = config_file,
                                                       **workflow_config ) )
