@@ -298,7 +298,7 @@ def calculate_bootstrap4clust(cx, cy, segmented, cset, nd_ref,
         c = segmented[n]
  
         # random bootstrap 
-        if True: #try:
+        try:
            cell_mapping, cran = random_field_generator_nonuniform_dist(c, 
                                         nd_ref,
                                         use_poisson = use_poisson,
@@ -306,7 +306,7 @@ def calculate_bootstrap4clust(cx, cy, segmented, cset, nd_ref,
                                         dmin = dmin,
                                         output_cell_mapping = True)
 
-        else: #except:
+        except:
             cran = np.zeros_like( c )
 
         segmented_ran[n] = cran[:, :]
