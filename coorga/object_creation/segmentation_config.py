@@ -123,6 +123,64 @@ def predefined_setups(name):
         b.update( dict( min_size = 16 ) )
         return b
 
+
+    # setups made after review of PCF paper 2019
+    elif name == 'exp030':
+        
+        s = dict( min_size = 36, 
+                  base_field = 'max_w',
+                  thresh = 0.7,
+                  name = name )
+        
+        b = predefined_setups('basic')
+        b.update( s )
+        return b
+
+    elif name == 'exp031':
+        
+        s = dict( min_size = 36, 
+                  base_field = 'max_mflux',
+                  thresh = 0.5,
+                  name = name )
+        
+        b = predefined_setups('basic')
+        b.update( s )
+        return b
+
+    elif name == 'exp032':
+        
+        s = dict( min_size = 36, 
+                  base_field = 'max_cflux',
+                  thresh = 6e-4,
+                  name = name )
+        
+        b = predefined_setups('basic')
+        b.update( s )
+        return b
+
+    elif name == 'exp033':
+        
+        s = dict( min_size = 36, 
+                  base_field = 'imf',
+                  thresh = 800.,
+                  name = name )
+        
+        b = predefined_setups('basic')
+        b.update( s )
+        return b
+
+    elif name == 'exp034':
+        
+        s = dict( min_size = 36, 
+                  base_field = 'tcwp',
+                  thresh = 3.,
+                  name = name )
+        
+        b = predefined_setups('basic')
+        b.update( s )
+        return b
+
+
     return 
 
 
@@ -137,7 +195,8 @@ def available_expnames():
     '''
 
     elist = ['basic', 'exp001', 'exp002', 'exp003', 'exp004', 'exp005', 
-             'basicde', 'exp010', 'exp011', 'exp022', 'exp023', 'exp123']
+             'basicde', 'exp010', 'exp011', 'exp022', 'exp023', 'exp123',
+             'epx030', 'exp031', 'exp032', 'exp033', 'exp034']
 
     return elist
 
