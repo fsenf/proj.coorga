@@ -180,6 +180,71 @@ def predefined_setups(name):
         b.update( s )
         return b
 
+# setups for sensitivity analysis
+
+    # min size update
+    elif name == 'exp040':
+        
+        s = dict( min_size = 4, 
+                  name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+    # min size update
+    elif name == 'exp041':
+        
+        s = dict( min_size = 4, 
+                  name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+    # low merge ratio update
+    elif name == 'exp042':
+        
+        s = dict( merge_ratio = 0.3, 
+                  name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+
+    # very low merge ratio update
+    elif name == 'exp043':
+        
+        s = dict( merge_ratio = 0.1, 
+                  name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+
+    # high merge ratio update
+    elif name == 'exp044':
+        
+        s = dict( merge_ratio = 0.7, 
+                  name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+
+    # very high merge ratio update
+    elif name == 'exp045':
+        
+        s = dict( merge_ratio = 0.9, 
+                  name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
 
     return 
 
