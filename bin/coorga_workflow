@@ -290,8 +290,8 @@ def add_pair_correlations( config ):
     save_pair_calculations.main( collection_file, 
                                  number_density_file,
                                  pcount_variables = pcount_variables,
-#                                 no_pcf = True)
-                                 no_pcf = False)
+                                 no_pcf = True)
+#                                 no_pcf = False)
 
 
     print
