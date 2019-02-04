@@ -112,6 +112,8 @@ def calculate_average_numberdensity(d,
         ybins = np.arange(y.min(), y.max(), dy)
 
         bins = (xbins, ybins)
+    else:
+        xbins, ybins = bins
     # ================================================================
 
 
