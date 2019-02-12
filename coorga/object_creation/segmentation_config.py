@@ -195,7 +195,7 @@ def predefined_setups(name):
     # min size update
     elif name == 'exp041':
         
-        s = dict( min_size = 4, 
+        s = dict( min_size = 16, 
                   name = name )
         
         b = predefined_setups('exp012')
@@ -245,6 +245,16 @@ def predefined_setups(name):
         b.update( s )
         return b
 
+    # connected compound clustering
+    elif name == 'exp046':
+        
+        s = dict( cluster_method = 'connect',
+                  name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
 
     return 
 
@@ -261,7 +271,9 @@ def available_expnames():
 
     elist = ['basic', 'exp001', 'exp002', 'exp003', 'exp004', 'exp005', 
              'basicde', 'exp010', 'exp011', 'exp022', 'exp023', 'exp123',
-             'epx030', 'exp031', 'exp032', 'exp033', 'exp034']
+             'exp030', 'exp031', 'exp032', 'exp033', 'exp034',
+             'exp040', 'exp041', 'exp042', 'exp043', 'exp044', 'exp045']
+
 
     return elist
 
