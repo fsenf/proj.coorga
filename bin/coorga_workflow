@@ -247,6 +247,7 @@ def make_number_density( config ):
     filelist = glob.glob( fnames.format( **config ) )
 
     iopt = dict( do_interpolation = True,
+                 filter_in_logspace=False,
                  variable_filename = filelist[0],
                  variable_name = config['varname'],
                  input_options = config['input_options'])
