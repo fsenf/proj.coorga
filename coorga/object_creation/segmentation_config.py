@@ -255,6 +255,17 @@ def predefined_setups(name):
         b.update( s )
         return b
 
+    # no filtering analysis
+    elif name == 'exp050':
+        
+        s = dict(  min_size = 0, 
+                   numberOfIterations = 0,
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
 
     return 
 
