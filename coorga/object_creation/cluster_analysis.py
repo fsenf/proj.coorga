@@ -462,7 +462,7 @@ def cluster_analysis(din, varname,
 
         if type(thresh_or_threshmethod) == type(''):
             thresh = special_threshold_calculations(din['lon'], din['lat'], f, 
-                                                    method = thresh)
+                                                    method = thresh_or_threshmethod)
         else:
             thresh = thresh_factor * thresh_or_threshmethod
 
