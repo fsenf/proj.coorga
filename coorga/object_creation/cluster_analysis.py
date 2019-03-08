@@ -411,7 +411,7 @@ def cluster_analysis(din, varname,
     sett = predefined_setups(expname.split('-')[0])
     setup_for_later_output = copy.copy(sett)
 
-    thresh = sett.pop('thresh')
+    thresh_or_threshmethod = sett.pop('thresh')
     min_size = sett.get('min_size')
 
 
@@ -426,7 +426,7 @@ def cluster_analysis(din, varname,
 
     elif varname == 'bt108':
         field = -din[varname]
-        thresh = -thresh 
+        thresh_factor = -1. 
 
         if verbose:
             print '... invert field'
@@ -434,7 +434,7 @@ def cluster_analysis(din, varname,
             
     else:
         field = din[varname]
-
+        thresh_factor = 1.
 
     # get field dimensions
     ntime, nrow, ncol = field.shape
@@ -460,9 +460,11 @@ def cluster_analysis(din, varname,
         # get local time field
         f = field[itime]
 
-        if type(thresh) == type(''):
+        if type(thresh_or_threshmethod) == type(''):
             thresh = special_threshold_calculations(din['lon'], din['lat'], f, 
                                                     method = thresh)
+        else:
+            thresh = thresh_factor * thresh_or_threshmethod
 
         # set masks
         f.data[f.mask] = thresh / 2.
