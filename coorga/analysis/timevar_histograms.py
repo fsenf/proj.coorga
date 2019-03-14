@@ -129,8 +129,12 @@ def timevar_hist(d, vname,
     cnsd = np.zeros((ntime, nbins))
     ccsd = np.zeros((ntime, nbins))
 
+    range_mask = ( d[vname] >= x.min() ) & ( d[vname] <= x.max() )
+
     for itime, t in enumerate( tlist ):
-        m = d['time_id'] == t
+        
+
+        m = ( d['time_id'] == t )  & range_mask
 
         v = d[vname][m]
 
