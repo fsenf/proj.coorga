@@ -269,7 +269,7 @@ def predefined_setups(name):
     # play with the percentage threshold
     elif name == 'exp051':
         
-        s = dict(  thresh = 'full_domain_relative55_for_mass_flux'
+        s = dict(  thresh = 'full_domain_relative55_for_mass_flux',
                    name = name )
         
         b = predefined_setups('exp012')
@@ -278,7 +278,7 @@ def predefined_setups(name):
 
     elif name == 'exp052':
         
-        s = dict(  thresh = 'full_domain_relative60_for_mass_flux'
+        s = dict(  thresh = 'full_domain_relative60_for_mass_flux',
                    name = name )
         
         b = predefined_setups('exp012')
@@ -287,7 +287,7 @@ def predefined_setups(name):
 
     elif name == 'exp053':
         
-        s = dict(  thresh = 'full_domain_relative45_for_mass_flux'
+        s = dict(  thresh = 'full_domain_relative45_for_mass_flux',
                    name = name )
         
         b = predefined_setups('exp012')
@@ -296,7 +296,7 @@ def predefined_setups(name):
 
     elif name == 'exp054':
         
-        s = dict(  thresh = 'full_domain_relative40_for_mass_flux'
+        s = dict(  thresh = 'full_domain_relative40_for_mass_flux',
                    name = name )
         
         b = predefined_setups('exp012')
