@@ -61,7 +61,7 @@ def special_threshold_calculations(lon, lat, f, method = None):
  
     elif 'full_domain_relative' in method:
 
-        method_format = 'full_domain_relative%d_for_mass_flux':
+        method_format = 'full_domain_relative%d_for_mass_flux'
         
         method_list = method.split('_')
 
