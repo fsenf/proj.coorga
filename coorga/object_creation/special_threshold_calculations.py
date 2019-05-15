@@ -59,8 +59,18 @@ def special_threshold_calculations(lon, lat, f, method = None):
         
         thresh = fp[csf < 50.].min()
  
-    elif method ==  'full_domain_relative50_for_mass_flux':
+    elif 'full_domain_relative' in method:
+
+        method_format = 'full_domain_relative%d_for_mass_flux':
         
+        method_list = method.split('_')
+
+        # extract number
+        last_two_digits = float( method_list[2][-2:] )
+
+        # assume that number is used as threshold
+        thresh = last_two_digits
+
         # no region masking
         #fm = atlantic_masking(lon, lat, f, mask_value = 0.)
         fm = f
@@ -69,6 +79,6 @@ def special_threshold_calculations(lon, lat, f, method = None):
         fp = np.where(fm > 0., fm, 0.)
         csf = stats.cumsum_data_fraction(fp)
         
-        thresh = fp[csf < 50.].min()
+        thresh = fp[csf < thresh].min()
         
     return thresh

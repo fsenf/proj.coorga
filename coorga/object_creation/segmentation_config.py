@@ -266,6 +266,43 @@ def predefined_setups(name):
         b.update( s )
         return b
 
+    # play with the percentage threshold
+    elif name == 'exp051':
+        
+        s = dict(  thresh = 'full_domain_relative55_for_mass_flux'
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+    elif name == 'exp052':
+        
+        s = dict(  thresh = 'full_domain_relative60_for_mass_flux'
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+    elif name == 'exp053':
+        
+        s = dict(  thresh = 'full_domain_relative45_for_mass_flux'
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+    elif name == 'exp054':
+        
+        s = dict(  thresh = 'full_domain_relative40_for_mass_flux'
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
 
     return 
 
@@ -283,7 +320,8 @@ def available_expnames():
     elist = ['basic', 'exp001', 'exp002', 'exp003', 'exp004', 'exp005', 
              'basicde', 'exp010', 'exp011', 'exp022', 'exp023', 'exp123',
              'exp030', 'exp031', 'exp032', 'exp033', 'exp034',
-             'exp040', 'exp041', 'exp042', 'exp043', 'exp044', 'exp045']
+             'exp040', 'exp041', 'exp042', 'exp043', 'exp044', 'exp045',
+             'exp050', 'exp051', 'exp052', 'exp053', 'exp054']
 
 
     return elist

@@ -1,6 +1,9 @@
 import glob
-from coorga._version import __version__
+#from coorga._version import __version__
+
 from setuptools import setup, find_packages
+
+__version__ = 'v0.3.0'
 
 setup(name='coorga',
       version = __version__,
