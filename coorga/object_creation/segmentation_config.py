@@ -303,6 +303,33 @@ def predefined_setups(name):
         b.update( s )
         return b
 
+    elif name == 'exp055':
+        
+        s = dict(  thresh = 'full_domain_relative30_for_mass_flux',
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+    elif name == 'exp056':
+        
+        s = dict(  thresh = 'full_domain_relative20_for_mass_flux',
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
+    elif name == 'exp057':
+        
+        s = dict(  thresh = 'full_domain_relative10_for_mass_flux',
+                   name = name )
+        
+        b = predefined_setups('exp012')
+        b.update( s )
+        return b
+
 
     return 
 
