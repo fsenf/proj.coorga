@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+import xarray as xr
 
 import tropy.analysis_tools.grid_and_interpolation as gi
 
@@ -180,3 +181,97 @@ def timevar_hist(d, vname,
 
 ######################################################################
 ######################################################################
+
+def histxr(dset, varname, bins, loop_dim = 'time', do_log = False):
+    
+    '''
+    Calculates histogram using xarray data structure. Allows to loop one dimension (e.g. time).
+    
+    
+    Parameters
+    ----------
+    dset : xarray Dataset
+        input data container
+        
+    varname : str
+        variable name for which binning is done
+        
+    bins : numpy array or list
+        set of bin edges for histogram computations
+        
+    loop_dim : str, optional
+        dimension name for which looping is done
+        default = 'time'
+        
+    do_log : bool, optional
+        switch for bin center calculations
+        if True: bins are assume to be equi-distant in log-space
+        
+        
+    Returns
+    --------
+    hset : xarray Dataset
+        histogram data, incl. pdf, cdf and cumulative moments
+    '''
+    
+    # ----------------------------
+    # (1) Preparation Part
+    # ----------------------------
+    
+    # nbin center points
+    if do_log:
+        logbins = np.log( bins )
+        clogbins = gi.lmean( logbins )
+        cbins = np.exp( clogbins )
+    else:
+        cbins = gi.lmean( bins )
+
+        
+    # ----------------------------
+    # (2) Loop Part
+    # ----------------------------
+    nloop = len( dset.coords[ loop_dim ] )
+    hist_list = []
+    
+    for i in range( nloop ):
+        d = dset.isel( {loop_dim : i} )[varname].data
+        
+        h, xe = np.histogram( d.flatten(), bins)
+        
+        hist_list += [ h.copy(), ]
+    
+    harray = np.row_stack( hist_list )
+    
+    
+    # ----------------------------
+    # (3) Xarray Part
+    # ----------------------------
+    
+    # store absolute counts
+    hset = xr.Dataset({'histogram': ([loop_dim, 'cbin'],  harray, {'longname':'absolute histogram counts'}) }, 
+                    coords={loop_dim: (loop_dim, dset[loop_dim]), 
+                            'ebin': ('ebin', bins, {'longname': 'bin egdes'}),
+                            'cbin': ('cbin', cbins, {'longname': 'bin mid-points'})},)
+    
+    hset['delta_bin'] = xr.DataArray( hset.ebin.diff('ebin').data, dims = 'cbin', attrs={'longname':'bin widths'})
+    
+    
+    # pdf
+    h_relative = hset.histogram / (1. * hset.histogram.sum( dim = 'cbin'))
+    pdf  =  h_relative / hset.delta_bin
+    hset['pdf'] = xr.DataArray( pdf, attrs = {'longname':'probability density function'})
+    
+    # cdf
+    cdf = ( pdf * hset.delta_bin ).cumsum( dim = 'cbin' )
+    hset['cdf'] = xr.DataArray( cdf, attrs = {'longname':'cumulative distribution function'})
+
+    # cumulative moments
+    for i in range(1,3):
+        mom = hset.cbin**i
+        cum_mom = ( mom * pdf * hset.delta_bin ).cumsum( dim = 'cbin' )
+        cum_mom_name = 'cum_mom%d' % i
+        hset[cum_mom_name] = xr.DataArray( cum_mom, 
+                                           attrs = {'longname':'cumulative %d. moment' % i})
+    
+    
+    return hset
