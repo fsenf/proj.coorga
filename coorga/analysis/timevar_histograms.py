@@ -246,14 +246,20 @@ def histxr(dset, varname, bins, loop_dim = 'time', do_log = False):
     # ----------------------------
     # (3) Xarray Part
     # ----------------------------
+    # get variable attributes
+    attrs = dict( dset[varname].attrs )
+    attrs['varname'] = varname
+    attrs['var_longname'] = attrs.pop('longname', 'None')
+    
     
     # store absolute counts
     hset = xr.Dataset({'histogram': ([loop_dim, 'cbin'],  harray, {'longname':'absolute histogram counts'}) }, 
                     coords={loop_dim: (loop_dim, dset[loop_dim]), 
-                            'ebin': ('ebin', bins, {'longname': 'bin egdes'}),
-                            'cbin': ('cbin', cbins, {'longname': 'bin mid-points'})},)
+                            'ebin': ('ebin', bins, dict(longname =  'bin egdes', **attrs) ),
+                            'cbin': ('cbin', cbins, dict(longname = 'bin mid-points', **attrs) ),})
     
-    hset['delta_bin'] = xr.DataArray( hset.ebin.diff('ebin').data, dims = 'cbin', attrs={'longname':'bin widths'})
+    hset['delta_bin'] = xr.DataArray( hset.ebin.diff('ebin').data, dims = 'cbin', 
+                                     attrs=dict(longname = 'bin widths', **attrs) )
     
     
     # pdf
@@ -275,3 +281,4 @@ def histxr(dset, varname, bins, loop_dim = 'time', do_log = False):
     
     
     return hset
+
